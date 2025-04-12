@@ -8,6 +8,8 @@ use crate::routes::error::not_found_handler;
 
 mod config;
 mod routes;
+mod services;
+mod models;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
