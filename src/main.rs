@@ -1,15 +1,21 @@
 use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr;
+use std::sync::Arc;
 use axum::Router;
+use sqlx::any::AnyPoolOptions;
+use sqlx::AnyPool;
 use sqlx::postgres::PgPoolOptions;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use crate::config::load_config;
 use crate::routes::error::not_found_handler;
+use crate::services::authentication::Authentication;
 
 mod config;
 mod routes;
 mod services;
 mod models;
+mod error;
+mod handlers;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -30,13 +36,16 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let pool = PgPoolOptions::new()
+    let pool = AnyPoolOptions::new()
             .max_connections(5)
             .connect(config.database.url.as_str())
             .await?;
 
+    let auth_service = Arc::new(Authentication::new(pool));
+
     let app = Router::new()
-        .nest("/api/health", routes::health::router())
+        .nest("/health", routes::health::router())
+        .nest("/register", routes::authentication::router(auth_service.clone()))
         .layer(tower_http::trace::TraceLayer::new_for_http())
         .fallback(not_found_handler);
 
