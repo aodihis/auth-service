@@ -8,8 +8,6 @@ CREATE TABLE users (
                        updated_at TIMESTAMP DEFAULT now(),
                        created_at TIMESTAMP DEFAULT now()
 );
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_username ON users(username);
 
 -- down.sql
 DROP TABLE users;

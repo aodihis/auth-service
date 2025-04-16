@@ -3,8 +3,6 @@ use std::str::FromStr;
 use std::sync::Arc;
 use axum::Router;
 use sqlx::any::AnyPoolOptions;
-use sqlx::AnyPool;
-use sqlx::postgres::PgPoolOptions;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use crate::config::load_config;
 use crate::routes::error::not_found_handler;
@@ -16,6 +14,7 @@ mod services;
 mod models;
 mod error;
 mod handlers;
+mod utils;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
