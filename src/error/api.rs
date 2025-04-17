@@ -1,4 +1,5 @@
 use std::fmt;
+use axum::extract::rejection::JsonRejection;
 use crate::models::response::{ApiResponse, ErrorFieldDetail};
 use axum::response::{IntoResponse, Response};
 use http::StatusCode;
@@ -12,6 +13,7 @@ pub enum ApiError {
         message: String,
         field_errors: Vec<(String, String)>,
     },
+    JsonRejection(JsonRejection),
 }
 
 impl fmt::Display for ApiError {
@@ -22,6 +24,7 @@ impl fmt::Display for ApiError {
             Self::Unauthorized(msg) => write!(f, "Unauthorized: {}", msg),
             Self::InternalServerError(msg) => write!(f, "Internal server error: {}", msg),
             Self::ValidationError { message, .. } => write!(f, "Validation error: {}", message),
+            Self::JsonRejection(rejection) => write!(f, "{}", rejection.body_text()),
         }
     }
 }
@@ -29,8 +32,8 @@ impl fmt::Display for ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let status = self.status_code();
-        let details = self.to_string();
-        let error_response: ApiResponse<(), String> = ApiResponse {
+        let details = self.details();
+        let error_response: ApiResponse<(), Vec<ErrorFieldDetail>> = ApiResponse {
             success: false,
             message: self.to_string(),
             data: None,
@@ -48,6 +51,7 @@ impl ApiError {
             ApiError::BadRequest(_) => {StatusCode::BAD_REQUEST}
             ApiError::InternalServerError(_) => {StatusCode::INTERNAL_SERVER_ERROR}
             ApiError::ValidationError { .. } => {StatusCode::UNPROCESSABLE_ENTITY}
+            ApiError::JsonRejection { .. } => {StatusCode::BAD_REQUEST}
         }
     }
 
@@ -64,5 +68,11 @@ impl ApiError {
             }
             _ => Vec::new(),
         }
+    }
+}
+
+impl From<JsonRejection> for ApiError {
+    fn from(error: JsonRejection) -> Self {
+        Self::JsonRejection(error)
     }
 }

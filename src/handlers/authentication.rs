@@ -7,10 +7,11 @@ use axum::Json;
 use serde_json::json;
 use std::sync::Arc;
 use validator::Validate;
+use crate::extractors::payload_json::PayloadJson;
 
 pub async fn register_user(
     State(auth_service): State<Arc<crate::services::authentication::Authentication>>,
-    Json(payload): Json<RegisterUser>,
+    PayloadJson(payload): PayloadJson<RegisterUser>,
 ) -> impl IntoResponse {
 
     if let Err(err) = payload.validate() {
