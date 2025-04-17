@@ -1,7 +1,6 @@
 use sqlx::{AnyPool};
 use uuid::Uuid;
-use crate::error::RegisterError;
-use crate::error::RegisterError::{AccountAlreadyExists, InternalServerError};
+use crate::error::authentication::RegisterError;
 use crate::models::request::RegisterUser;
 use crate::utils::security::hash_password;
 
@@ -22,7 +21,7 @@ impl Authentication {
         let user_id = Uuid::new_v4();
         let password_hash = match hash_password(&payload.password) {
             Ok(hash) => hash,
-            Err(_) => return Err(InternalServerError),
+            Err(_) => return Err(RegisterError::InternalServerError),
         };
 
         match sqlx::query(
@@ -43,10 +42,10 @@ impl Authentication {
                 if let sqlx::Error::Database(db_err) = &e {
                     if db_err.constraint() == Some("users_username_key") ||
                         db_err.constraint() == Some("users_email_key") {
-                        return Err(AccountAlreadyExists)
+                        return Err(RegisterError::AccountAlreadyExists)
                     }
                 }
-                Err(InternalServerError)
+                Err(RegisterError::InternalServerError)
             }
         }
 

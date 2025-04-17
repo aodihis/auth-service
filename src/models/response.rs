@@ -4,14 +4,16 @@ use http::StatusCode;
 use serde::Serialize;
 
 #[derive(Serialize)]
-pub struct ApiResponse<T> {
+pub struct ApiResponse<T, E>
+where T: Serialize, E: Serialize
+{
     pub success: bool,
     pub message: String,
     pub data: Option<T>,
-    pub error: Option<ApiError>,
+    pub error: Option<E>,
 }
 
-impl<T: Serialize> IntoResponse for ApiResponse<T> {
+impl<T: Serialize, E: Serialize> IntoResponse for ApiResponse<T, E> {
     fn into_response(self) -> Response {
         let status = if self.success {
             StatusCode::OK
@@ -25,7 +27,7 @@ impl<T: Serialize> IntoResponse for ApiResponse<T> {
 
 
 #[derive(Serialize)]
-pub struct ApiError {
-    pub code: String,
-    pub details: Option<String>,
+pub struct ErrorFieldDetail {
+    pub(crate) field: String,
+    pub(crate) message: String,
 }

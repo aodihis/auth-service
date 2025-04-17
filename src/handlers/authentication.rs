@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-use std::sync::Arc;
-use axum::extract::State;
-use axum::Json;
-use axum::response::IntoResponse;
-use serde_json::json;
-use validator::Validate;
-use crate::error::RegisterError;
+use crate::error::api::ApiError;
+use crate::error::authentication::RegisterError;
 use crate::models::request::RegisterUser;
+use axum::extract::State;
+use axum::response::IntoResponse;
+use axum::Json;
+use serde_json::json;
+use std::sync::Arc;
+use validator::Validate;
 
 pub async fn register_user(
     State(auth_service): State<Arc<crate::services::authentication::Authentication>>,
@@ -14,7 +14,7 @@ pub async fn register_user(
 ) -> impl IntoResponse {
 
     if let Err(err) = payload.validate() {
-        let mut errors_map = HashMap::new();
+        let mut errors_map = vec![];
 
         for (field, errors) in err.field_errors() {
             let messages: Vec<String> = errors.iter()
@@ -22,12 +22,13 @@ pub async fn register_user(
                 .map(|m| m.to_string())
                 .collect();
 
-            errors_map.insert(field.to_string(), messages);
+            errors_map.push((field.to_string(), messages.join(", ")));
         }
 
-        let error_json = json!({ "fields": errors_map }).to_string();
-
-        return RegisterError::InvalidInput(error_json).into_response();
+        return ApiError::ValidationError {
+            message: "Invalid input".to_string(),
+            field_errors: errors_map,
+        }.into_response();
     }
 
 
@@ -36,7 +37,11 @@ pub async fn register_user(
             Json(json!({"success": true})).into_response()
         }
         Err(err) => {
-            err.into_response()
+            match err {
+                RegisterError::AccountAlreadyExists => {ApiError::Conflict("Account already exists".to_string())}
+                RegisterError::InvalidInput(msg) => { ApiError::ValidationError { message: msg, field_errors: vec![] }}
+                RegisterError::InternalServerError => { ApiError::InternalServerError("Internal server error".to_string()) }
+            }.into_response()
         }
     }
 
