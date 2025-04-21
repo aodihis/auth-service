@@ -7,6 +7,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use crate::config::load_config;
 use crate::routes::error::not_found_handler;
 use crate::services::authentication::Authentication;
+use crate::services::email::EmailService;
 
 mod config;
 mod routes;
@@ -42,7 +43,8 @@ async fn main() -> anyhow::Result<()> {
             .connect(config.database.url.as_str())
             .await?;
 
-    let auth_service = Arc::new(Authentication::new(pool));
+    let email_service = Arc::new(EmailService::new());
+    let auth_service = Arc::new(Authentication::new(pool, email_service));
 
     let app = Router::new()
         .nest("/health", routes::health::router())

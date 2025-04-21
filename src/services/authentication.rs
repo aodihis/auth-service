@@ -1,17 +1,21 @@
+use std::sync::Arc;
 use sqlx::{AnyPool};
 use uuid::Uuid;
 use crate::error::authentication::RegisterError;
 use crate::models::request::RegisterUser;
+use crate::services::email::EmailService;
 use crate::utils::security::hash_password;
 
 pub struct Authentication {
     pool: AnyPool,
+    email_service: Arc<EmailService>,
 }
 
 impl Authentication {
-    pub fn new(pool: AnyPool) -> Self {
+    pub fn new(pool: AnyPool, email_service: Arc<EmailService>) -> Self {
         Self {
-            pool
+            pool,
+            email_service
         }
     }
 
