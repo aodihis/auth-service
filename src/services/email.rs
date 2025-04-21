@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(unused_variables)]
 // Email service.
 // Provide the email service in here
 pub struct EmailService {
