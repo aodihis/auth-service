@@ -1,0 +1,9 @@
+server:
+  host: "127.0.0.1"
+  port: 3000
+
+database:
+  pool_size: 10
+
+jwt:
+  expiration_minutes: 60
