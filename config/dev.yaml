@@ -7,3 +7,7 @@ database:
 
 jwt:
   expiration_minutes: 60
+
+smtp:
+  from: "noreply noreply@example.com"
+  host: "smtp.example.com"

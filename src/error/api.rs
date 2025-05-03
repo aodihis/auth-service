@@ -1,9 +1,13 @@
+#[allow(dead_code)]
+#[allow(unused_variables)]
 use std::fmt;
 use axum::extract::rejection::JsonRejection;
 use crate::models::response::{ApiResponse, ErrorFieldDetail};
 use axum::response::{IntoResponse, Response};
 use http::StatusCode;
 
+#[allow(dead_code)]
+#[allow(unused_variables)]
 pub enum ApiError {
     Conflict(String),
     Unauthorized(String),

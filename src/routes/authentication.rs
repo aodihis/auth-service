@@ -1,6 +1,6 @@
 use crate::handlers::authentication::register_user;
 use crate::services::authentication::Authentication as AuthenticationService;
-use axum::routing::{get, post};
+use axum::routing::post;
 use axum::Router;
 use std::sync::Arc;
 

@@ -1,5 +1,9 @@
+#[allow(dead_code)]
+#[allow(unused_variables)]
 use thiserror::Error;
 
+#[allow(dead_code)]
+#[allow(unused_variables)]
 #[derive(Error, Debug)]
 pub enum RegisterError {
     #[error("Email or username is already registered")]

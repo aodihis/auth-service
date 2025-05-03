@@ -22,7 +22,7 @@ mod extractors;
 async fn main() -> anyhow::Result<()> {
 
     let config = match load_config() {
-        Ok(cfg) => cfg,
+        Ok(cfg) => Arc::new(cfg),
         Err(e) => {
             eprintln!("Config load failed: {e}");
             return Err(anyhow::anyhow!("Config load failed"));
@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
             .connect(config.database.url.as_str())
             .await?;
 
-    let email_service = Arc::new(EmailService::new());
+    let email_service = Arc::new(EmailService::new(config.clone()));
     let auth_service = Arc::new(Authentication::new(pool, email_service));
 
     let app = Router::new()

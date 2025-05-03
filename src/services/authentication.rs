@@ -1,22 +1,21 @@
 use std::sync::Arc;
-use chrono::{DateTime, Duration, Utc};
-use sqlx::{AnyPool, Error};
-use sqlx::any::AnyQueryResult;
+use chrono::{Duration, Utc};
+use sqlx::{AnyPool};
 use tracing::log::error;
 use uuid::Uuid;
 use crate::error::authentication::RegisterError;
 use crate::models::activation_token::ActivationToken;
 use crate::models::request::RegisterUser;
-use crate::services::email::EmailService;
+use crate::services::traits::EmailServiceBase;
 use crate::utils::security::hash_password;
 
 pub struct Authentication {
     pool: AnyPool,
-    email_service: Arc<EmailService>,
+    email_service: Arc<dyn EmailServiceBase>,
 }
 
 impl Authentication {
-    pub fn new(pool: AnyPool, email_service: Arc<EmailService>) -> Self {
+    pub fn new(pool: AnyPool, email_service: Arc<dyn EmailServiceBase>) -> Self {
         Self {
             pool,
             email_service
@@ -63,6 +62,8 @@ impl Authentication {
 
     }
 
+    // async fn create_user(&self, )
+
     async fn send_activation_token(&self, user_id: Uuid) {
         let activation_token = ActivationToken {
             user_id,
@@ -83,15 +84,9 @@ impl Authentication {
                     activation_token.token,
         );
 
-        match self.email_service.send_email(
-            "test@example.com", vec![], vec![], "Account Activation", &template_string
-        ) {
-            Ok(_) => (),
-            Err(e) => {
-                error!("Failed to send activation email for user: {}", user_id);
-            }
-        }
-
+        let _ = self.email_service.send_email(
+            "test@example.com".parse().unwrap(), vec![], vec![], "Account Activation".parse().unwrap(), template_string
+        );
     }
 
     async fn save_activation_token(&self, activation_token: &ActivationToken) {

@@ -7,6 +7,7 @@ pub struct Config {
     pub server: ServerConfig,
     pub database: DatabaseConfig,
     pub jwt: JwtConfig,
+    pub smtp: SmtpConfig,
 }
 
 #[derive(Debug, Deserialize)]
@@ -38,6 +39,14 @@ pub struct JwtConfig {
 #[derive(Debug, Deserialize)]
 pub struct AuthConfig {
 
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SmtpConfig {
+    pub from: String,
+    pub host: String,
+    pub username: String,
+    pub password: String,
 }
 
 fn default_jwt_expiration() -> i64 {
