@@ -11,3 +11,6 @@ jwt:
 smtp:
   from: "noreply noreply@example.com"
   host: "smtp.example.com"
+
+app:
+  verification_url: "http://localhost/verify"

@@ -44,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
             .await?;
 
     let email_service = Arc::new(EmailService::new(config.clone()));
-    let auth_service = Arc::new(Authentication::new(pool, email_service));
+    let auth_service = Arc::new(Authentication::new(pool, email_service, config.clone()));
 
     let app = Router::new()
         .nest("/health", routes::health::router())

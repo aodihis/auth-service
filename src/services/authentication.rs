@@ -1,7 +1,9 @@
 use std::sync::Arc;
 use chrono::{Duration, Utc};
+use crate::config::Config;
 use sqlx::{AnyPool};
 use tracing::log::error;
+use tracing_subscriber::fmt::format;
 use uuid::Uuid;
 use crate::error::authentication::RegisterError;
 use crate::models::activation_token::ActivationToken;
@@ -12,13 +14,15 @@ use crate::utils::security::hash_password;
 pub struct Authentication {
     pool: AnyPool,
     email_service: Arc<dyn EmailServiceBase>,
+    config: Arc<Config>
 }
 
 impl Authentication {
-    pub fn new(pool: AnyPool, email_service: Arc<dyn EmailServiceBase>) -> Self {
+    pub fn new(pool: AnyPool, email_service: Arc<dyn EmailServiceBase>, config: Arc<Config>) -> Self {
         Self {
             pool,
-            email_service
+            email_service,
+            config
         }
     }
 
@@ -62,14 +66,14 @@ impl Authentication {
 
     }
 
-    // async fn create_user(&self, )
-
     async fn send_activation_token(&self, user_id: Uuid) {
         let activation_token = ActivationToken {
             user_id,
             token: Uuid::new_v4().to_string(),
             expires_at: Utc::now() +  Duration::days(15),
         };
+
+        let verify_url = format!("{}?token={}", self.config.app.verification_url, activation_token.token);
         self.save_activation_token(&activation_token).await;
         let template_string = format!(
             r#"
@@ -81,7 +85,7 @@ impl Authentication {
                 Best regards,
                 Your App Team
                 "#,
-                    activation_token.token,
+                    verify_url,
         );
 
         let _ = self.email_service.send_email(

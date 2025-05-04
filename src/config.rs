@@ -8,6 +8,12 @@ pub struct Config {
     pub database: DatabaseConfig,
     pub jwt: JwtConfig,
     pub smtp: SmtpConfig,
+    pub app: AppConfig
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AppConfig {
+    pub verification_url: String,
 }
 
 #[derive(Debug, Deserialize)]
