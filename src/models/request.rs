@@ -35,3 +35,86 @@ fn validate_password(password: &str) -> Result<(), ValidationError> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use validator::Validate;
+
+    #[test]
+    fn test_valid_user_input() {
+        let user = RegisterUser {
+            email: "test@example.com".into(),
+            username: "user123".into(),
+            password: "Valid1@pass".into(),
+        };
+
+        let result = user.validate();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_invalid_email() {
+        let user = RegisterUser {
+            email: "invalid_email".into(),
+            username: "user123".into(),
+            password: "Valid1@pass".into(),
+        };
+
+        let result = user.validate();
+        assert!(result.is_err());
+        let binding = result.unwrap_err();
+        let errors = binding.field_errors();
+        assert!(errors.contains_key("email"));
+    }
+
+    #[test]
+    fn test_short_username() {
+        let user = RegisterUser {
+            email: "test@example.com".into(),
+            username: "us".into(),
+            password: "Valid1@pass".into(),
+        };
+
+        let result = user.validate();
+        assert!(result.is_err());
+        let binding = result.unwrap_err();
+        let errors = binding.field_errors();
+        assert!(errors.contains_key("username"));
+    }
+
+    #[test]
+    fn test_password_too_short() {
+        let result = validate_password("A1@bc");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().code, "password_too_short");
+    }
+
+    #[test]
+    fn test_password_no_lowercase() {
+        let result = validate_password("PASSWORD1@");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().code, "password_no_lowercase");
+    }
+
+    #[test]
+    fn test_password_no_uppercase() {
+        let result = validate_password("password1@");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().code, "password_no_uppercase");
+    }
+
+    #[test]
+    fn test_password_no_number() {
+        let result = validate_password("Password@");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().code, "password_no_number");
+    }
+
+    #[test]
+    fn test_password_no_special_char() {
+        let result = validate_password("Password1");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().code, "password_no_special_char");
+    }
+}

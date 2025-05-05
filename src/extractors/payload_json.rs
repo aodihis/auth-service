@@ -31,11 +31,10 @@ impl IntoResponse for JsonError {
 }
 #[cfg(test)]
 mod tests {
-    use axum::body::to_bytes;
-    use axum::extract::rejection::{JsonRejection, JsonSyntaxError};
+    use crate::extractors::payload_json::JsonError;
+    use axum::extract::rejection::JsonRejection;
     use axum::response::IntoResponse;
     use http::StatusCode;
-    use crate::extractors::payload_json::JsonError;
 
     #[test]
     fn test_json_error_into_response() {
