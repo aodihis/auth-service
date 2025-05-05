@@ -23,12 +23,12 @@ pub enum ApiError {
 impl fmt::Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Conflict(msg) => write!(f, "Conflict: {}", msg),
+            Self::Conflict(msg) => write!(f, "{}", msg),
             Self::BadRequest(msg) => write!(f, "Bad request: {}", msg),
             Self::Unauthorized(msg) => write!(f, "Unauthorized: {}", msg),
             Self::InternalServerError(msg) => write!(f, "Internal server error: {}", msg),
             Self::ValidationError { message, .. } => write!(f, "Validation error: {}", message),
-            Self::JsonRejection(rejection) => write!(f, "{}", rejection.body_text()),
+            Self::JsonRejection(_) => write!(f, "Failed to retrieve json"),
         }
     }
 }

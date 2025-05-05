@@ -8,7 +8,8 @@ use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 use std::sync::Arc;
 use anyhow::anyhow;
-use tracing::error;
+use lettre::transport::smtp::client::Tls;
+use tracing::{error, info};
 
 pub struct EmailService {
     pub config: Arc<Config>,
@@ -23,8 +24,15 @@ impl EmailServiceBase for EmailService {
         subject: String,
         content: String,
     ) -> Pin<Box<dyn Future<Output = Result<(), EmailError>> + Send>> {
+        let from = match format!("{}<{}>", self.config.smtp.from_name, self.config.smtp.from_email).parse() {
+            Ok(from) => from,
+            Err(err) => {
+                error!("Invalid from configuration: {}", err);
+                return Box::pin(async { Err(EmailError::InternalServerError) });
+            }
+        };
         let mut builder = Message::builder()
-            .from(self.config.smtp.from.parse().unwrap())
+            .from(from)
             .to(to.parse().unwrap())
             .subject(subject)
             .header(ContentType::TEXT_HTML);
@@ -47,12 +55,19 @@ impl EmailServiceBase for EmailService {
         let creds = Credentials::new(self.config.smtp.username.to_string(), self.config.smtp.password.to_string());
 
         // Create the SMTP transport
-        let mailer = SmtpTransport::relay(&self.config.smtp.host).unwrap() // e.g., "smtp.gmail.com"
-            .credentials(creds)
-            .build();
+        let mut mailer_builder = SmtpTransport::relay(&self.config.smtp.host).unwrap()
+            .port(self.config.smtp.port)// e.g., "smtp.gmail.com"
+            .credentials(creds);
+
+        if self.config.smtp.tls == false {
+            mailer_builder = mailer_builder.tls(Tls::None);
+        }
+
+        let mailer = mailer_builder.build();
 
         match mailer.send(&email) {
             Ok(_) => Box::pin(async move {
+                info!("Successfully sent email to {}", to);
                 Ok(())
             }),
             Err(e) => Box::pin(async move {

@@ -49,10 +49,13 @@ pub struct AuthConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct SmtpConfig {
-    pub from: String,
+    pub from_name: String,
+    pub from_email: String,
     pub host: String,
+    pub port: u16,
     pub username: String,
     pub password: String,
+    pub tls: bool
 }
 
 fn default_jwt_expiration() -> i64 {

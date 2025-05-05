@@ -9,8 +9,11 @@ jwt:
   expiration_minutes: 60
 
 smtp:
-  from: "noreply noreply@example.com"
-  host: "smtp.example.com"
+  from_name: "noreply"
+  from_email: "noreply@example.com"
+  host: "sandbox.smtp.mailtrap.io"
+  port: 2525
+  tls: false
 
 app:
   verification_url: "http://localhost/verify"

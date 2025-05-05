@@ -15,4 +15,7 @@ pub enum EmailError {
 
     #[error("Unexpected error: {0}")]
     Other(#[from] anyhow::Error),
+
+    #[error("Internal server error")]
+    InternalServerError
 }

@@ -11,7 +11,6 @@ CREATE TABLE users (
 
 -- Email Verification Tokens
 CREATE TABLE verification_tokens (
-       id BIGINT PRIMARY KEY AUTO_INCREMENT,
        user_id UUID NOT NULL,
        token VARCHAR(255)  NOT NULL,
        expires_at TIMESTAMP NOT NULL,

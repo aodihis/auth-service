@@ -3,6 +3,8 @@ use std::str::FromStr;
 use std::sync::Arc;
 use axum::Router;
 use sqlx::any::{install_default_drivers, AnyPoolOptions};
+use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use crate::config::load_config;
 use crate::routes::error::not_found_handler;
@@ -38,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     install_default_drivers();
-    let pool = AnyPoolOptions::new()
+    let pool = PgPoolOptions::new()
             .max_connections(5)
             .connect(config.database.url.as_str())
             .await?;

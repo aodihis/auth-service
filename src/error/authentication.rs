@@ -5,7 +5,7 @@ use thiserror::Error;
 #[allow(dead_code)]
 #[allow(unused_variables)]
 #[derive(Error, Debug)]
-pub enum RegisterError {
+pub enum AuthenticationError {
     #[error("Email or username is already registered")]
     AccountAlreadyExists,
 

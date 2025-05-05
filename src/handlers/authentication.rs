@@ -1,5 +1,5 @@
 use crate::error::api::ApiError;
-use crate::error::authentication::RegisterError;
+use crate::error::authentication::AuthenticationError;
 use crate::models::request::RegisterUser;
 use axum::extract::State;
 use axum::response::IntoResponse;
@@ -39,9 +39,9 @@ pub async fn register_user(
         }
         Err(err) => {
             match err {
-                RegisterError::AccountAlreadyExists => {ApiError::Conflict("Account already exists".to_string())}
-                RegisterError::InvalidInput(msg) => { ApiError::ValidationError { message: msg, field_errors: vec![] }}
-                RegisterError::InternalServerError => { ApiError::InternalServerError("Internal server error".to_string()) }
+                AuthenticationError::AccountAlreadyExists => {ApiError::Conflict("Account already exists".to_string())}
+                AuthenticationError::InvalidInput(msg) => { ApiError::ValidationError { message: msg, field_errors: vec![] }}
+                AuthenticationError::InternalServerError => { ApiError::InternalServerError("Internal server error".to_string()) }
             }.into_response()
         }
     }
