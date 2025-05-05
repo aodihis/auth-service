@@ -34,17 +34,18 @@ impl Authentication {
             Ok(hash) => hash,
             Err(_) => return Err(AuthenticationError::InternalServerError),
         };
-
+        let is_active = false;
         match sqlx::query(
             r#"
-            INSERT INTO users (id, username, email, password_hash)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO users (id, username, email, password_hash, is_active)
+            VALUES ($1, $2, $3, $4, $5)
             "#,
         )
             .bind(user_id)
             .bind(payload.username)
             .bind(payload.email)
             .bind(password_hash)
+            .bind(is_active)
             .execute(&self.pool)
             .await
         {
@@ -71,7 +72,7 @@ impl Authentication {
         let result = sqlx::query(
             r#"
                     SELECT * FROM verification_tokens
-                    WHERE token = $1 AND expiry_at < NOW()
+                    WHERE token = $1 AND expires_at > NOW()
                     "#
                 )
             .bind(token)

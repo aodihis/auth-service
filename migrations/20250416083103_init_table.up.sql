@@ -4,7 +4,7 @@ CREATE TABLE users (
        username TEXT UNIQUE NOT NULL,
        email TEXT UNIQUE NOT NULL,
        password_hash TEXT NOT NULL,
-       is_active BOOLEAN NOT NULL DEFAULT true,
+       is_active BOOLEAN NOT NULL DEFAULT false,
        updated_at TIMESTAMP DEFAULT now(),
        created_at TIMESTAMP DEFAULT now()
 );
