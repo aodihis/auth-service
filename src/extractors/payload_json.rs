@@ -29,3 +29,21 @@ impl IntoResponse for JsonError {
         ).into_response()
     }
 }
+#[cfg(test)]
+mod tests {
+    use axum::body::to_bytes;
+    use axum::extract::rejection::{JsonRejection, JsonSyntaxError};
+    use axum::response::IntoResponse;
+    use http::StatusCode;
+    use crate::extractors::payload_json::JsonError;
+
+    #[test]
+    fn test_json_error_into_response() {
+
+        let error = JsonError::JsonRejection(JsonRejection::MissingJsonContentType(Default::default()));
+
+        let response = error.into_response();
+        assert_eq!(response.status(), StatusCode::UNSUPPORTED_MEDIA_TYPE);
+    }
+}
+

@@ -28,7 +28,6 @@ impl Authentication {
 
     pub async fn register(&self, payload: RegisterUser) -> Result<(), RegisterError> {
 
-
         let user_id = Uuid::new_v4();
         let password_hash = match hash_password(&payload.password) {
             Ok(hash) => hash,
@@ -111,8 +110,6 @@ impl Authentication {
                 error!("Failed to save activation token : {}", e)
             }
         };
-
-
     }
 }
 
