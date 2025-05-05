@@ -14,5 +14,8 @@ pub enum AuthenticationError {
 
     #[error("Internal server error")]
     InternalServerError,
+
+    #[error("Invalid token")]
+    InvalidToken,
 }
 

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use chrono::{Duration, Utc};
 use crate::config::Config;
-use sqlx::{AnyPool, Error, PgPool};
+use sqlx::{AnyPool, Error, PgPool, Row};
 use tracing::info;
 use tracing::log::error;
 use tracing_subscriber::fmt::format;
@@ -50,7 +50,7 @@ impl Authentication {
         {
             Ok(_) => Ok(()),
             Err(e) => {
-                if let sqlx::Error::Database(db_err) = &e {
+                if let Error::Database(db_err) = &e {
                     if db_err.constraint() == Some("users_username_key") ||
                         db_err.constraint() == Some("users_email_key") {
                         return Err(AuthenticationError::AccountAlreadyExists)
@@ -66,6 +66,58 @@ impl Authentication {
 
     }
 
+    pub async fn verify_email(&self, token: String) -> Result<(), AuthenticationError> {
+
+        let result = sqlx::query(
+            r#"
+                    SELECT * FROM verification_tokens
+                    WHERE token = $1 AND expiry_at < NOW()
+                    "#
+                )
+            .bind(token)
+            .fetch_optional(&self.pool)
+            .await;
+
+        match result {
+            Ok(Some(row)) => {
+                let user_id: Uuid = match row.try_get("user_id") {
+                    Ok(id) => id,
+                    Err(_) => {
+                        return Err(AuthenticationError::InternalServerError);
+                    }
+                };
+                self.activate_user(user_id).await
+            },
+            Ok(None) => {
+                Err(AuthenticationError::InvalidToken)
+            }
+            Err(e) => {
+                error!("Failed to verify email: {}", e);
+                Err(AuthenticationError::InternalServerError)
+            }
+        }
+    }
+
+    async fn activate_user(&self, user_id: Uuid) -> Result<(), AuthenticationError> {
+
+        let res = sqlx::query!(
+                r#"
+                    UPDATE users
+                    SET is_active = true
+                    WHERE id = $1
+                    "#,
+                user_id
+            )
+            .execute(&self.pool)
+            .await;
+        match res {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                error!("Failed to activate user: {}", e);
+                Err(AuthenticationError::InternalServerError)
+            }
+        }
+    }
     async fn send_activation_token(&self, user_id: Uuid) -> Result<(), AuthenticationError> {
         info!("Sending activation token for user {}", user_id);
         let activation_token = ActivationToken {
@@ -94,7 +146,7 @@ impl Authentication {
                     verify_url,
         );
 
-        let res = self.email_service.send_email(
+        let _ = self.email_service.send_email(
             "test@example.com".parse().unwrap(), vec![], vec![], "Account Activation".parse().unwrap(), template_string
         ).await;
 

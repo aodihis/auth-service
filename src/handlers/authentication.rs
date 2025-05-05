@@ -42,6 +42,7 @@ pub async fn register_user(
                 AuthenticationError::AccountAlreadyExists => {ApiError::Conflict("Account already exists".to_string())}
                 AuthenticationError::InvalidInput(msg) => { ApiError::ValidationError { message: msg, field_errors: vec![] }}
                 AuthenticationError::InternalServerError => { ApiError::InternalServerError("Internal server error".to_string()) }
+                AuthenticationError::InvalidToken => {ApiError::BadRequest("Invalid token".to_string())}
             }.into_response()
         }
     }
