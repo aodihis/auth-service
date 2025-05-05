@@ -36,6 +36,11 @@ fn validate_password(password: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
+#[derive(Deserialize, Debug, Validate)]
+pub struct Token {
+    pub token: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

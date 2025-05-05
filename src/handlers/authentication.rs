@@ -1,6 +1,6 @@
 use crate::error::api::ApiError;
 use crate::error::authentication::AuthenticationError;
-use crate::models::request::RegisterUser;
+use crate::models::request::{RegisterUser, Token};
 use axum::extract::State;
 use axum::response::IntoResponse;
 use axum::Json;
@@ -13,7 +13,6 @@ pub async fn register_user(
     State(auth_service): State<Arc<crate::services::authentication::Authentication>>,
     PayloadJson(payload): PayloadJson<RegisterUser>,
 ) -> impl IntoResponse {
-
     if let Err(err) = payload.validate() {
         let mut errors_map = vec![];
 
@@ -38,13 +37,33 @@ pub async fn register_user(
             Json(json!({"success": true})).into_response()
         }
         Err(err) => {
-            match err {
-                AuthenticationError::AccountAlreadyExists => {ApiError::Conflict("Account already exists".to_string())}
-                AuthenticationError::InvalidInput(msg) => { ApiError::ValidationError { message: msg, field_errors: vec![] }}
-                AuthenticationError::InternalServerError => { ApiError::InternalServerError("Internal server error".to_string()) }
-                AuthenticationError::InvalidToken => {ApiError::BadRequest("Invalid token".to_string())}
-            }.into_response()
+            convert_error(err).into_response()
         }
     }
+}
 
+pub async fn verify_user(
+    State(auth_service): State<Arc<crate::services::authentication::Authentication>>,
+    PayloadJson(payload): PayloadJson<Token>,
+) -> impl IntoResponse {
+
+    let token = payload.token;
+
+    match auth_service.verify_user(token).await {
+        Ok(_) => {
+            Json(json!({"success": true})).into_response()
+        },
+        Err(err) => {
+            convert_error(err).into_response()
+        }
+    }
+}
+
+fn convert_error(err: AuthenticationError) -> ApiError {
+    match err {
+        AuthenticationError::AccountAlreadyExists => {ApiError::Conflict("Account already exists".to_string())}
+        AuthenticationError::InvalidInput(msg) => { ApiError::ValidationError { message: msg, field_errors: vec![] }}
+        AuthenticationError::InternalServerError => { ApiError::InternalServerError("Internal server error".to_string()) }
+        AuthenticationError::InvalidToken => {ApiError::BadRequest("Invalid token".to_string())}
+    }
 }

@@ -66,7 +66,7 @@ impl Authentication {
 
     }
 
-    pub async fn verify_email(&self, token: String) -> Result<(), AuthenticationError> {
+    pub async fn verify_user(&self, token: String) -> Result<(), AuthenticationError> {
 
         let result = sqlx::query(
             r#"
