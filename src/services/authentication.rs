@@ -99,6 +99,24 @@ impl Authentication {
         }
     }
 
+    pub async fn resend_activation_token(&self, user_id: &Uuid) -> Result<(), AuthenticationError> {
+        self.remove_old_activation_token(user_id).await;
+        self.send_activation_token(user_id.clone()).await
+    }
+
+    async fn remove_old_activation_token(&self, user_id: &Uuid) {
+        let _ = sqlx::query(
+            r#"
+                    DELETE FROM verification_tokens
+                    WHERE user_id = $1
+                    "#
+        )
+            .bind(user_id)
+            .execute(&self.pool)
+            .await;
+
+    }
+
     async fn activate_user(&self, user_id: Uuid) -> Result<(), AuthenticationError> {
 
         let res = sqlx::query!(

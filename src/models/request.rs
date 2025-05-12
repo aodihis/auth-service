@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
 #[derive(Deserialize, Debug, Validate)]
@@ -39,6 +40,11 @@ fn validate_password(password: &str) -> Result<(), ValidationError> {
 #[derive(Deserialize, Debug, Validate)]
 pub struct Token {
     pub token: String,
+}
+
+#[derive(Deserialize, Debug, Validate)]
+pub struct ResendToken {
+    pub user_id: Uuid,
 }
 
 #[cfg(test)]

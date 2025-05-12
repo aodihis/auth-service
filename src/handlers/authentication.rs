@@ -1,6 +1,6 @@
 use crate::error::api::ApiError;
 use crate::error::authentication::AuthenticationError;
-use crate::models::request::{RegisterUser, Token};
+use crate::models::request::{RegisterUser, ResendToken, Token};
 use axum::extract::State;
 use axum::response::IntoResponse;
 use axum::Json;
@@ -50,6 +50,22 @@ pub async fn verify_user(
     let token = payload.token;
 
     match auth_service.verify_user(token).await {
+        Ok(_) => {
+            Json(json!({"success": true})).into_response()
+        },
+        Err(err) => {
+            convert_error(err).into_response()
+        }
+    }
+}
+
+pub async fn resend_token(
+    State(auth_service): State<Arc<crate::services::authentication::Authentication>>,
+    PayloadJson(payload): PayloadJson<ResendToken>,
+) -> impl IntoResponse {
+    let user_id = payload.user_id;
+
+    match auth_service.resend_activation_token(&user_id).await {
         Ok(_) => {
             Json(json!({"success": true})).into_response()
         },
