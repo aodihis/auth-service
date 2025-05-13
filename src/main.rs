@@ -10,6 +10,7 @@ use crate::config::load_config;
 use crate::routes::error::not_found_handler;
 use crate::services::authentication::Authentication;
 use crate::services::email::EmailService;
+use crate::services::users::Users;
 
 mod config;
 mod routes;
@@ -20,6 +21,15 @@ mod handlers;
 mod utils;
 mod extractors;
 
+pub struct AppState {
+   services: Services
+}
+
+pub struct Services {
+    auth_service: Authentication,
+    email_service: EmailService,
+    user_service: Users
+}
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
 
@@ -40,14 +50,19 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     install_default_drivers();
-    let pool = PgPoolOptions::new()
+    let pool = Arc::new(PgPoolOptions::new()
             .max_connections(5)
             .connect(config.database.url.as_str())
-            .await?;
+            .await?);
 
-    let email_service = Arc::new(EmailService::new(config.clone()));
-    let auth_service = Arc::new(Authentication::new(pool, email_service, config.clone()));
-
+    let email_service = EmailService::new(config.clone());
+    let auth_service = Authentication::new(pool.clone(), config.clone());
+    let user_service = Users::new(pool, config.clone());
+    let state = AppState {
+        services: Services {
+            email_service,auth_service, user_service
+        }
+    };
     let app = Router::new()
         .nest("/health", routes::health::router())
         .nest("/user", routes::authentication::router(auth_service.clone()))

@@ -47,6 +47,12 @@ pub struct ResendToken {
     pub user_id: Uuid,
 }
 
+#[derive(Deserialize, Debug, Validate)]
+pub struct Login {
+    pub email: Option<String>,
+    pub username: Option<String>,
+    pub password: String,
+}
 #[cfg(test)]
 mod tests {
     use super::*;

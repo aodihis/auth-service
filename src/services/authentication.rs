@@ -13,16 +13,14 @@ use crate::services::traits::EmailServiceBase;
 use crate::utils::security::hash_password;
 
 pub struct Authentication {
-    pool: PgPool,
-    email_service: Arc<dyn EmailServiceBase>,
+    pool: Arc<PgPool>,
     config: Arc<Config>
 }
 
 impl Authentication {
-    pub fn new(pool: PgPool, email_service: Arc<dyn EmailServiceBase>, config: Arc<Config>) -> Self {
+    pub fn new(pool: Arc<PgPool>,  config: Arc<Config>) -> Self {
         Self {
             pool,
-            email_service,
             config
         }
     }

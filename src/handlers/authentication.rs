@@ -1,6 +1,6 @@
 use crate::error::api::ApiError;
 use crate::error::authentication::AuthenticationError;
-use crate::models::request::{RegisterUser, ResendToken, Token};
+use crate::models::request::{Login, RegisterUser, ResendToken, Token};
 use axum::extract::State;
 use axum::response::IntoResponse;
 use axum::Json;
@@ -73,6 +73,13 @@ pub async fn resend_token(
             convert_error(err).into_response()
         }
     }
+}
+
+pub async fn login(
+    State(auth_service): State<Arc<crate::services::authentication::Authentication>>,
+    PayloadJson(payload): PayloadJson<Login>,
+) -> impl IntoResponse {
+    Json(json!({"success": true})).into_response()
 }
 
 fn convert_error(err: AuthenticationError) -> ApiError {
