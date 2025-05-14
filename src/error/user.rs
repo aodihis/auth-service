@@ -12,7 +12,7 @@ pub enum UserError {
     InternalServerError,
 
     #[error("User not found: {0}")]
-    UserNotFound,
+    UserNotFound(String),
 }
 
 impl Into<ApiError> for UserError {
@@ -20,7 +20,7 @@ impl Into<ApiError> for UserError {
         match self {
             UserError::AccountAlreadyExists => ApiError::Conflict(String::from("AccountAlreadyExists")),
             UserError::InternalServerError => ApiError::InternalServerError("Internal server error".to_string()),
-            UserError::UserNotFound => ApiError::BadRequest("User not found".to_string()),
+            UserError::UserNotFound(error) => ApiError::BadRequest(error),
         }
     }
 }
