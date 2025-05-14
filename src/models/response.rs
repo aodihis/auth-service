@@ -5,7 +5,9 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct ApiResponse<T, E>
-where T: Serialize, E: Serialize
+where
+    T: Serialize,
+    E: Serialize,
 {
     pub success: bool,
     pub message: String,
@@ -24,7 +26,6 @@ impl<T: Serialize, E: Serialize> IntoResponse for ApiResponse<T, E> {
         (status, Json(self)).into_response()
     }
 }
-
 
 #[derive(Serialize)]
 pub struct ErrorFieldDetail {

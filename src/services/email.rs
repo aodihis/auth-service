@@ -1,14 +1,14 @@
-use std::pin::Pin;
 use crate::config::Config;
 use crate::error::email::EmailError;
 use crate::error::email::EmailError::Other;
 use crate::services::traits::EmailServiceBase;
-use lettre::message::header::{ContentType};
-use lettre::transport::smtp::authentication::Credentials;
-use lettre::{Message, SmtpTransport, Transport};
-use std::sync::Arc;
 use anyhow::anyhow;
+use lettre::message::header::ContentType;
+use lettre::transport::smtp::authentication::Credentials;
 use lettre::transport::smtp::client::Tls;
+use lettre::{Message, SmtpTransport, Transport};
+use std::pin::Pin;
+use std::sync::Arc;
 use tracing::{error, info};
 
 pub struct EmailService {
@@ -24,7 +24,12 @@ impl EmailServiceBase for EmailService {
         subject: String,
         content: String,
     ) -> Pin<Box<dyn Future<Output = Result<(), EmailError>> + Send>> {
-        let from = match format!("{}<{}>", self.config.smtp.from_name, self.config.smtp.from_email).parse() {
+        let from = match format!(
+            "{}<{}>",
+            self.config.smtp.from_name, self.config.smtp.from_email
+        )
+        .parse()
+        {
             Ok(from) => from,
             Err(err) => {
                 error!("Invalid from configuration: {}", err);
@@ -47,16 +52,18 @@ impl EmailServiceBase for EmailService {
             builder = builder.bcc(bcc_email.parse().unwrap());
         }
 
-        let email = builder
-            .body(content)
-            .unwrap();
+        let email = builder.body(content).unwrap();
 
         // SMTP credentials
-        let creds = Credentials::new(self.config.smtp.username.to_string(), self.config.smtp.password.to_string());
+        let creds = Credentials::new(
+            self.config.smtp.username.to_string(),
+            self.config.smtp.password.to_string(),
+        );
 
         // Create the SMTP transport
-        let mut mailer_builder = SmtpTransport::relay(&self.config.smtp.host).unwrap()
-            .port(self.config.smtp.port)// e.g., "smtp.gmail.com"
+        let mut mailer_builder = SmtpTransport::relay(&self.config.smtp.host)
+            .unwrap()
+            .port(self.config.smtp.port) // e.g., "smtp.gmail.com"
             .credentials(creds);
 
         if self.config.smtp.tls == false {
@@ -75,15 +82,11 @@ impl EmailServiceBase for EmailService {
                 Err(Other(anyhow!(e.to_string())))
             }),
         }
-
     }
 }
 
 impl EmailService {
     pub fn new(config: Arc<Config>) -> Self {
-        Self {
-            config,
-        }
+        Self { config }
     }
-
 }

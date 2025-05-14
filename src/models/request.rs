@@ -8,7 +8,7 @@ pub struct RegisterUser {
     pub email: String,
     #[validate(length(min = 3, message = "Username must be at least 3 characters"))]
     pub username: String,
-    #[validate(custom(function="validate_password"))]
+    #[validate(custom(function = "validate_password"))]
     pub password: String,
 }
 

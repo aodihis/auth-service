@@ -1,3 +1,3 @@
-pub mod health;
-pub mod error;
 pub mod authentication;
+pub mod error;
+pub mod health;

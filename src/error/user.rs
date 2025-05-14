@@ -1,5 +1,5 @@
-use thiserror::Error;
 use crate::error::api::ApiError;
+use thiserror::Error;
 
 #[allow(dead_code)]
 #[allow(unused_variables)]
@@ -18,8 +18,12 @@ pub enum UserError {
 impl Into<ApiError> for UserError {
     fn into(self) -> ApiError {
         match self {
-            UserError::AccountAlreadyExists => ApiError::Conflict(String::from("AccountAlreadyExists")),
-            UserError::InternalServerError => ApiError::InternalServerError("Internal server error".to_string()),
+            UserError::AccountAlreadyExists => {
+                ApiError::Conflict(String::from("AccountAlreadyExists"))
+            }
+            UserError::InternalServerError => {
+                ApiError::InternalServerError("Internal server error".to_string())
+            }
             UserError::UserNotFound(error) => ApiError::BadRequest(error),
         }
     }

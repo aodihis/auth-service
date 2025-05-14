@@ -1,6 +1,6 @@
-use std::env;
 use config::{Config as RawConfig, ConfigError, Environment, File};
 use serde::Deserialize;
+use std::env;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
@@ -8,7 +8,7 @@ pub struct Config {
     pub database: DatabaseConfig,
     pub jwt: JwtConfig,
     pub smtp: SmtpConfig,
-    pub app: AppConfig
+    pub app: AppConfig,
 }
 
 #[derive(Debug, Deserialize)]
@@ -43,9 +43,7 @@ pub struct JwtConfig {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct AuthConfig {
-
-}
+pub struct AuthConfig {}
 
 #[derive(Debug, Deserialize)]
 pub struct SmtpConfig {
@@ -55,7 +53,7 @@ pub struct SmtpConfig {
     pub port: u16,
     pub username: String,
     pub password: String,
-    pub tls: bool
+    pub tls: bool,
 }
 
 fn default_jwt_expiration() -> i64 {
@@ -69,7 +67,8 @@ pub fn load_config() -> Result<Config, ConfigError> {
 
     let config = RawConfig::builder()
         .add_source(File::with_name(&format!("config/{}", run_env)).required(false))
-        .add_source(Environment::default().separator("_")).build()?;
+        .add_source(Environment::default().separator("_"))
+        .build()?;
     // Parse environment variables into config
     config.try_deserialize()
 }

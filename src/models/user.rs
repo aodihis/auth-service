@@ -2,7 +2,6 @@ use chrono::{DateTime, Utc};
 use serde::Serialize;
 use uuid::Uuid;
 
-
 #[derive(Serialize)]
 pub struct User {
     pub id: Uuid,

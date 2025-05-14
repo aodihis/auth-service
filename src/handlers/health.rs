@@ -1,5 +1,5 @@
-use axum::response::IntoResponse;
 use crate::models::response::ApiResponse;
+use axum::response::IntoResponse;
 
 pub async fn health_handler() -> impl IntoResponse {
     ApiResponse::<(), ()> {

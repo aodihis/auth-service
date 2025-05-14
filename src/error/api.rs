@@ -50,26 +50,24 @@ impl IntoResponse for ApiError {
 impl ApiError {
     fn status_code(&self) -> StatusCode {
         match self {
-            ApiError::Conflict(_) => {StatusCode::CONFLICT}
-            ApiError::Unauthorized(_) => {StatusCode::UNAUTHORIZED}
-            ApiError::BadRequest(_) => {StatusCode::BAD_REQUEST}
-            ApiError::InternalServerError(_) => {StatusCode::INTERNAL_SERVER_ERROR}
-            ApiError::ValidationError { .. } => {StatusCode::UNPROCESSABLE_ENTITY}
-            ApiError::JsonRejection { .. } => {StatusCode::BAD_REQUEST}
+            ApiError::Conflict(_) => StatusCode::CONFLICT,
+            ApiError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+            ApiError::BadRequest(_) => StatusCode::BAD_REQUEST,
+            ApiError::InternalServerError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::ValidationError { .. } => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiError::JsonRejection { .. } => StatusCode::BAD_REQUEST,
         }
     }
 
     fn details(&self) -> Vec<ErrorFieldDetail> {
         match self {
-            Self::ValidationError { field_errors, .. } => {
-                field_errors
-                    .iter()
-                    .map(|(field, message)| ErrorFieldDetail {
-                        field: field.clone(),
-                        message: message.clone(),
-                    })
-                    .collect()
-            }
+            Self::ValidationError { field_errors, .. } => field_errors
+                .iter()
+                .map(|(field, message)| ErrorFieldDetail {
+                    field: field.clone(),
+                    message: message.clone(),
+                })
+                .collect(),
             _ => Vec::new(),
         }
     }
@@ -87,8 +85,7 @@ mod tests {
     use axum::body::to_bytes;
     use axum::response::IntoResponse;
     use http::StatusCode;
-    use serde_json::{json, Value};
-
+    use serde_json::{Value, json};
 
     // Dummy implementation of ErrorFieldDetail if needed
     #[derive(Debug, serde::Serialize, PartialEq)]
@@ -157,7 +154,10 @@ mod tests {
         let json: Value = serde_json::from_slice(&body).unwrap();
 
         assert_eq!(json["success"], false);
-        assert_eq!(json["message"], "Internal server error: Something went wrong");
+        assert_eq!(
+            json["message"],
+            "Internal server error: Something went wrong"
+        );
     }
 
     #[tokio::test]
@@ -185,5 +185,4 @@ mod tests {
         assert_eq!(json["success"], false);
         assert_eq!(json["message"], "Unauthorized: Login required");
     }
-
 }

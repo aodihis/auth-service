@@ -18,4 +18,3 @@ pub enum AuthenticationError {
     #[error("Invalid token")]
     InvalidToken,
 }
-

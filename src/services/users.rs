@@ -1,8 +1,3 @@
-use std::sync::Arc;
-use sqlx::{Error, PgPool};
-use sqlx::postgres::PgPoolOptions;
-use tracing::log::error;
-use uuid::Uuid;
 use crate::config::Config;
 use crate::error::authentication::AuthenticationError;
 use crate::error::user::UserError;
@@ -10,18 +5,20 @@ use crate::models::request::RegisterUser;
 use crate::models::user::User;
 use crate::services::traits::EmailServiceBase;
 use crate::utils::security::hash_password;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Error, PgPool};
+use std::sync::Arc;
+use tracing::log::error;
+use uuid::Uuid;
 
 pub struct Users {
     pool: PgPool,
-    config: Arc<Config>
+    config: Arc<Config>,
 }
 
 impl Users {
-    pub fn new(pool: PgPool,  config: Arc<Config>) -> Self {
-        Self {
-            pool,
-            config
-        }
+    pub fn new(pool: PgPool, config: Arc<Config>) -> Self {
+        Self { pool, config }
     }
 
     pub async fn create_user(&self, user_payload: RegisterUser) -> Result<User, UserError> {
@@ -37,24 +34,25 @@ impl Users {
             VALUES ($1, $2, $3, $4, $5)
             "#,
         )
-            .bind(user_id)
-            .bind(user_payload.username)
-            .bind(user_payload.email.clone())
-            .bind(password_hash)
-            .bind(is_active)
-            .execute(&self.pool)
-            .await
+        .bind(user_id)
+        .bind(user_payload.username)
+        .bind(user_payload.email.clone())
+        .bind(password_hash)
+        .bind(is_active)
+        .execute(&self.pool)
+        .await
         {
             Ok(_) => Ok(()),
             Err(e) => {
                 if let Error::Database(db_err) = &e {
-                    if db_err.constraint() == Some("users_username_key") ||
-                        db_err.constraint() == Some("users_email_key") {
-                        return Err(UserError::AccountAlreadyExists)
+                    if db_err.constraint() == Some("users_username_key")
+                        || db_err.constraint() == Some("users_email_key")
+                    {
+                        return Err(UserError::AccountAlreadyExists);
                     }
                 }
                 error!("Failed to save users: {}", e.to_string());
-                return Err(UserError::InternalServerError)
+                return Err(UserError::InternalServerError);
             }
         }?;
         Ok(User {
