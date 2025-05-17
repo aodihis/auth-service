@@ -37,7 +37,7 @@ impl Users {
         .bind(user_id)
         .bind(user_payload.username)
         .bind(user_payload.email.clone())
-        .bind(password_hash)
+        .bind(password_hash.clone())
         .bind(is_active)
         .execute(&self.pool)
         .await
@@ -58,10 +58,30 @@ impl Users {
         Ok(User {
             id: user_id,
             email: user_payload.email,
+            password_hash,
             username: "".to_string(),
             is_active,
             created_at: Default::default(),
             updated_at: Default::default(),
         })
+    }
+
+    pub async fn get_user_by_email_or_username(&self, identity: &str) -> Result<User, UserError> {
+
+        let user_exists = sqlx::query_as::<_, User>(
+            "SELECT * FROM users WHERE username = $1 OR email = $1"
+        )
+            .bind(identity)
+            .fetch_one(&self.pool)
+            .await;
+
+        if let Ok(user) = user_exists {
+            Ok(user)
+        } else {
+            error!("Error: {:?}", user_exists.err());
+
+            Err(UserError::UserNotFound("Invalid credentials".to_string()))
+        }
+
     }
 }

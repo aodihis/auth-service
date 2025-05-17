@@ -18,4 +18,7 @@ pub enum AuthenticationError {
 
     #[error("Invalid token")]
     InvalidToken,
+
+    #[error("Invalid Credentials")]
+    InvalidCredentials,
 }

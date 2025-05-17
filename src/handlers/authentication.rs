@@ -9,6 +9,7 @@ use axum::Json;
 use serde_json::json;
 use std::sync::Arc;
 use validator::Validate;
+use crate::models::authenticate::JwtToken;
 
 pub async fn register_user(
     State(state): State<Arc<AppState>>,
@@ -80,6 +81,16 @@ pub async fn resend_token(
 pub async fn login(
     State(state): State<Arc<AppState>>,
     PayloadJson(payload): PayloadJson<Login>,
-) -> impl IntoResponse {
-    Json(json!({"success": true})).into_response()
+) -> Result<SuccessResponse<JwtToken>, ApiError> {
+    let identity = payload.identity;
+    let user = state.services.user_service.get_user_by_email_or_username(&identity).await?;
+
+    let token = state.services.auth_service.login(user, identity).await?;
+
+    Ok(SuccessResponse {
+        message: "Login success".to_string(),
+        data: Some(JwtToken {
+            token
+        })
+    })
 }

@@ -49,8 +49,7 @@ pub struct ResendToken {
 
 #[derive(Deserialize, Debug, Validate)]
 pub struct Login {
-    pub email: Option<String>,
-    pub username: Option<String>,
+    pub identity: String,
     pub password: String,
 }
 #[cfg(test)]

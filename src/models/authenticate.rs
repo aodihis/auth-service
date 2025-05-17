@@ -8,3 +8,8 @@ pub struct ActivationToken {
     pub token: String,
     pub expires_at: DateTime<Utc>,
 }
+
+#[derive(Serialize)]
+pub struct JwtToken {
+    pub token: String,
+}

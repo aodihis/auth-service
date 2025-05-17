@@ -1,10 +1,10 @@
 use crate::config::Config;
 use crate::error::authentication::AuthenticationError;
-use crate::models::activation_token::ActivationToken;
+use crate::models::authenticate::ActivationToken;
 use crate::models::request::RegisterUser;
 use crate::services::email::EmailService;
 use crate::services::traits::EmailServiceBase;
-use crate::utils::security::hash_password;
+use crate::utils::security::{hash_password, verify_password};
 use chrono::{Duration, Utc};
 use sqlx::{AnyPool, Error, PgPool, Row};
 use std::sync::Arc;
@@ -12,7 +12,9 @@ use tracing::info;
 use tracing::log::error;
 use tracing_subscriber::fmt::format;
 use uuid::Uuid;
-
+use crate::models::claims::Claims;
+use crate::models::user::User;
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 pub struct Authentication {
     pool: PgPool,
     config: Arc<Config>,
@@ -108,6 +110,30 @@ impl Authentication {
         self.remove_old_activation_token(user_id).await;
         self.send_activation_token(email_service, user_id.clone())
             .await
+    }
+
+    pub async fn login(&self, user: User, password: String) -> Result<String, AuthenticationError> {
+        if !verify_password(&password, &user.password_hash) {
+            return Err(AuthenticationError::InternalServerError)
+        }
+
+        let token = self.create_token(&user)?;
+        Ok(token)
+    }
+
+    fn create_token(&self, user: &User) -> Result<String, AuthenticationError> {
+        let expiration = Utc::now().checked_add_signed(Duration::days(self.config.jwt.expiration))
+            .expect("valid timestamp").timestamp() as usize;
+        let claims = Claims {
+            sub: user.username.clone(),
+            exp: expiration,
+            iat: Utc::now().timestamp() as usize,
+        };
+
+        match encode(&Header::default(), &claims, &EncodingKey::from_secret(&self.config.jwt.secret.as_bytes())) {
+            Ok(token) => Ok(token),
+            Err(_) => Err(AuthenticationError::InternalServerError),
+        }
     }
 
     async fn remove_old_activation_token(&self, user_id: &Uuid) {

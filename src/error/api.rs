@@ -95,6 +95,7 @@ impl From<AuthenticationError> for ApiError {
                 ApiError::InternalServerError("Internal server error".to_string())
             }
             AuthenticationError::InvalidToken => ApiError::BadRequest("Invalid token".to_string()),
+            AuthenticationError::InvalidCredentials => ApiError::Unauthorized("Invalid credentials".to_string()),
         }
     }
 }
@@ -108,7 +109,7 @@ impl From<UserError> for ApiError {
             UserError::InternalServerError => {
                 ApiError::InternalServerError("Internal server error".to_string())
             }
-            UserError::UserNotFound(error) => ApiError::BadRequest(error),
+            UserError::UserNotFound(error) => ApiError::Unauthorized(error),
         }
     }
 }
