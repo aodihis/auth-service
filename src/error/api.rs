@@ -5,6 +5,8 @@ use http::StatusCode;
 #[allow(dead_code)]
 #[allow(unused_variables)]
 use std::fmt;
+use crate::error::authentication::AuthenticationError;
+use crate::error::user::UserError;
 
 #[allow(dead_code)]
 #[allow(unused_variables)]
@@ -76,6 +78,38 @@ impl ApiError {
 impl From<JsonRejection> for ApiError {
     fn from(error: JsonRejection) -> Self {
         Self::JsonRejection(error)
+    }
+}
+
+impl From<AuthenticationError> for ApiError {
+    fn from(error: AuthenticationError) -> Self {
+        match error {
+            AuthenticationError::AccountAlreadyExists => {
+                ApiError::Conflict("Account already exists".to_string())
+            }
+            AuthenticationError::InvalidInput(msg) => ApiError::ValidationError {
+                message: msg,
+                field_errors: vec![],
+            },
+            AuthenticationError::InternalServerError => {
+                ApiError::InternalServerError("Internal server error".to_string())
+            }
+            AuthenticationError::InvalidToken => ApiError::BadRequest("Invalid token".to_string()),
+        }
+    }
+}
+
+impl From<UserError> for ApiError {
+    fn from(err: UserError) -> Self {
+        match err {
+            UserError::AccountAlreadyExists => {
+                ApiError::Conflict(String::from("AccountAlreadyExists"))
+            }
+            UserError::InternalServerError => {
+                ApiError::InternalServerError("Internal server error".to_string())
+            }
+            UserError::UserNotFound(error) => ApiError::BadRequest(error),
+        }
     }
 }
 

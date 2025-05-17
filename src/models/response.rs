@@ -32,3 +32,21 @@ pub struct ErrorFieldDetail {
     pub(crate) field: String,
     pub(crate) message: String,
 }
+
+pub struct SuccessResponse<T>
+where
+    T: Serialize,
+{
+    pub message: String,
+    pub data: Option<T>,
+}
+impl<T: Serialize> IntoResponse for SuccessResponse<T> {
+    fn into_response(self) -> Response {
+        ApiResponse::<T, ()> {
+            success: true,
+            message: self.message,
+            data: self.data,
+            error: None,
+        }.into_response()
+    }
+}
