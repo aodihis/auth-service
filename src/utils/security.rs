@@ -16,5 +16,7 @@ pub fn verify_password(password: &str, hashed_password: &str) -> bool {
         Ok(h) => h,
         Err(_) => return false,
     };
-    Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok()
+    Argon2::default()
+        .verify_password(password.as_bytes(), &parsed_hash)
+        .is_ok()
 }

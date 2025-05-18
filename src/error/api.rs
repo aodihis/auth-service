@@ -1,3 +1,5 @@
+use crate::error::authentication::AuthenticationError;
+use crate::error::user::UserError;
 use crate::models::response::{ApiResponse, ErrorFieldDetail};
 use axum::extract::rejection::JsonRejection;
 use axum::response::{IntoResponse, Response};
@@ -5,8 +7,6 @@ use http::StatusCode;
 #[allow(dead_code)]
 #[allow(unused_variables)]
 use std::fmt;
-use crate::error::authentication::AuthenticationError;
-use crate::error::user::UserError;
 
 #[allow(dead_code)]
 #[allow(unused_variables)]
@@ -95,7 +95,9 @@ impl From<AuthenticationError> for ApiError {
                 ApiError::InternalServerError("Internal server error".to_string())
             }
             AuthenticationError::InvalidToken => ApiError::BadRequest("Invalid token".to_string()),
-            AuthenticationError::InvalidCredentials => ApiError::Unauthorized("Invalid credentials".to_string()),
+            AuthenticationError::InvalidCredentials => {
+                ApiError::Unauthorized("Invalid credentials".to_string())
+            }
         }
     }
 }

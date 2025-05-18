@@ -6,7 +6,7 @@ database:
   pool_size: 10
 
 jwt:
-  expiration_minutes: 60
+  expiration: 1209600
 
 smtp:
   from_name: "noreply"

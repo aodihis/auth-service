@@ -1,15 +1,18 @@
 use crate::app_state::AppState;
 use crate::error::api::ApiError;
 use crate::extractors::payload_json::PayloadJson;
+use crate::models::authenticate::JwtToken;
 use crate::models::request::{Login, RegisterUser, ResendToken, Token};
 use crate::models::response::SuccessResponse;
+use axum::Json;
 use axum::extract::State;
 use axum::response::IntoResponse;
-use axum::Json;
 use serde_json::json;
 use std::sync::Arc;
+use tower_cookies::cookie::SameSite;
+use tower_cookies::cookie::time::Duration;
+use tower_cookies::{Cookie, Cookies};
 use validator::Validate;
-use crate::models::authenticate::JwtToken;
 
 pub async fn register_user(
     State(state): State<Arc<AppState>>,
@@ -40,7 +43,7 @@ pub async fn register_user(
         .auth_service
         .send_activation_token(&state.services.email_service, user.id)
         .await?;
-    Ok(SuccessResponse{
+    Ok(SuccessResponse {
         data: None,
         message: "User created".to_string(),
     })
@@ -49,7 +52,7 @@ pub async fn register_user(
 pub async fn verify_user(
     State(state): State<Arc<AppState>>,
     PayloadJson(payload): PayloadJson<Token>,
-) ->  Result<SuccessResponse<()>, ApiError> {
+) -> Result<SuccessResponse<()>, ApiError> {
     let token = payload.token;
 
     state.services.auth_service.verify_email(token).await?;
@@ -75,22 +78,31 @@ pub async fn resend_token(
         data: None,
         message: "Token resent".to_string(),
     })
-
 }
 
 pub async fn login(
     State(state): State<Arc<AppState>>,
+    cookies: Cookies,
     PayloadJson(payload): PayloadJson<Login>,
-) -> Result<SuccessResponse<JwtToken>, ApiError> {
+) -> Result<SuccessResponse<()>, ApiError> {
     let identity = payload.identity;
-    let user = state.services.user_service.get_user_by_email_or_username(&identity).await?;
+    let user = state
+        .services
+        .user_service
+        .get_user_by_email_or_username(&identity)
+        .await?;
 
     let token = state.services.auth_service.login(user, identity).await?;
+    let cookie = Cookie::build(("jwt_token", token))
+        .path("/")
+        .http_only(true)
+        .secure(true)
+        .same_site(SameSite::Strict)
+        .max_age(Duration::seconds(state.config.jwt.expiration));
 
+    cookies.add(cookie.into());
     Ok(SuccessResponse {
         message: "Login success".to_string(),
-        data: Some(JwtToken {
-            token
-        })
+        data: None,
     })
 }

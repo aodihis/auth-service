@@ -1,7 +1,7 @@
+use crate::error::api::ApiError;
 #[allow(dead_code)]
 #[allow(unused_variables)]
 use thiserror::Error;
-use crate::error::api::ApiError;
 
 #[allow(dead_code)]
 #[allow(unused_variables)]

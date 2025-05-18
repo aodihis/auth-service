@@ -4,13 +4,14 @@ use crate::routes::error::not_found_handler;
 use crate::services::authentication::Authentication;
 use crate::services::email::EmailService;
 use crate::services::users::Users;
-use axum::Router;
+use axum::{Extension, Router};
 use sqlx::PgPool;
 use sqlx::any::{AnyPoolOptions, install_default_drivers};
 use sqlx::postgres::PgPoolOptions;
 use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr;
 use std::sync::Arc;
+use tower_cookies::CookieManagerLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod app_state;
@@ -50,6 +51,7 @@ async fn main() -> anyhow::Result<()> {
     let auth_service = Authentication::new(pool.clone(), config.clone());
     let user_service = Users::new(pool, config.clone());
     let state = Arc::new(AppState {
+        config: config.clone(),
         services: Services {
             email_service,
             auth_service,
@@ -60,6 +62,7 @@ async fn main() -> anyhow::Result<()> {
         .nest("/health", routes::health::router())
         .nest("/user", routes::authentication::router(state))
         .layer(tower_http::trace::TraceLayer::new_for_http())
+        .layer(CookieManagerLayer::new())
         .fallback(not_found_handler);
 
     // print!("hos : {}", config.server.host);

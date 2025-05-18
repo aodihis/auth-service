@@ -69,21 +69,18 @@ impl Users {
 
     pub async fn get_user_by_email_or_username(&self, identity: &str) -> Result<User, UserError> {
         info!("Querying user: {}", identity);
-        let user_result = sqlx::query_as::<_, User>(
-            "SELECT * FROM users WHERE username = $1 OR email = $1"
-        )
-            .bind(identity)
-            .fetch_optional(&self.pool)
-            .await;
+        let user_result =
+            sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = $1 OR email = $1")
+                .bind(identity)
+                .fetch_optional(&self.pool)
+                .await;
 
         match user_result {
-            Ok(Some(user)) => {
-                Ok(user)
-            },
+            Ok(Some(user)) => Ok(user),
             Ok(None) => {
                 info!("User not found for {}", identity);
                 Err(UserError::UserNotFound("Invalid credentials".to_string()))
-            },
+            }
             Err(err) => {
                 error!("Failed to querying user: {}", err.to_string());
                 Err(UserError::InternalServerError)

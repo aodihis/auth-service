@@ -1,9 +1,12 @@
+use crate::config::Config;
 use crate::services::authentication::Authentication;
 use crate::services::email::EmailService;
 use crate::services::users::Users;
+use std::sync::Arc;
 
 pub struct AppState {
-    pub(crate) services: Services,
+    pub services: Services,
+    pub config: Arc<Config>,
 }
 
 pub struct Services {

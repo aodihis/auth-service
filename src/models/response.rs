@@ -47,6 +47,7 @@ impl<T: Serialize> IntoResponse for SuccessResponse<T> {
             message: self.message,
             data: self.data,
             error: None,
-        }.into_response()
+        }
+        .into_response()
     }
 }
