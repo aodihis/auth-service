@@ -73,7 +73,7 @@ impl Authentication {
         Ok(())
     }
 
-    pub async fn verify_user(&self, token: String) -> Result<(), AuthenticationError> {
+    pub async fn verify_email(&self, token: String) -> Result<(), AuthenticationError> {
         let result = sqlx::query(
             r#"
                     SELECT * FROM verification_tokens
@@ -92,7 +92,7 @@ impl Authentication {
                         return Err(AuthenticationError::InternalServerError);
                     }
                 };
-                self.activate_user(user_id).await
+                self.verified_user_email(user_id).await
             }
             Ok(None) => Err(AuthenticationError::InvalidToken),
             Err(e) => {
@@ -148,11 +148,11 @@ impl Authentication {
         .await;
     }
 
-    async fn activate_user(&self, user_id: Uuid) -> Result<(), AuthenticationError> {
+    async fn verified_user_email(&self, user_id: Uuid) -> Result<(), AuthenticationError> {
         let res = sqlx::query!(
             r#"
                     UPDATE users
-                    SET is_active = true
+                    SET email_verified = true
                     WHERE id = $1
                     "#,
             user_id

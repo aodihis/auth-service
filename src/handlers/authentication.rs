@@ -52,7 +52,7 @@ pub async fn verify_user(
 ) ->  Result<SuccessResponse<()>, ApiError> {
     let token = payload.token;
 
-    state.services.auth_service.verify_user(token).await?;
+    state.services.auth_service.verify_email(token).await?;
 
     Ok(SuccessResponse {
         data: None,
