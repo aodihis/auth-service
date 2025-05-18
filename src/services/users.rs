@@ -8,6 +8,7 @@ use crate::utils::security::hash_password;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Error, PgPool};
 use std::sync::Arc;
+use tracing::info;
 use tracing::log::error;
 use uuid::Uuid;
 
@@ -67,21 +68,26 @@ impl Users {
     }
 
     pub async fn get_user_by_email_or_username(&self, identity: &str) -> Result<User, UserError> {
-
-        let user_exists = sqlx::query_as::<_, User>(
+        info!("Querying user: {}", identity);
+        let user_result = sqlx::query_as::<_, User>(
             "SELECT * FROM users WHERE username = $1 OR email = $1"
         )
             .bind(identity)
-            .fetch_one(&self.pool)
+            .fetch_optional(&self.pool)
             .await;
 
-        if let Ok(user) = user_exists {
-            Ok(user)
-        } else {
-            error!("Error: {:?}", user_exists.err());
-
-            Err(UserError::UserNotFound("Invalid credentials".to_string()))
+        match user_result {
+            Ok(Some(user)) => {
+                Ok(user)
+            },
+            Ok(None) => {
+                info!("User not found for {}", identity);
+                Err(UserError::UserNotFound("Invalid credentials".to_string()))
+            },
+            Err(err) => {
+                error!("Failed to querying user: {}", err.to_string());
+                Err(UserError::InternalServerError)
+            }
         }
-
     }
 }
