@@ -10,6 +10,8 @@ use tower_cookies::cookie::SameSite;
 use tower_cookies::{Cookie, Cookies};
 use tracing::debug;
 use validator::Validate;
+use crate::error::authentication::AuthenticationError;
+use crate::models::authenticate::LoginInfo;
 
 pub async fn register_user(
     State(state): State<Arc<AppState>>,
@@ -93,10 +95,12 @@ pub async fn login(
     let token = state.services.auth_service.login(user, password).await?;
 
     debug!("Create cookie for jwt_token");
+
+    let secure = state.config.app.env != "dev".to_string();
     let cookie = Cookie::build(("jwt_token", token))
         .path("/")
         .http_only(true)
-        .secure(true)
+        .secure(secure)
         .same_site(SameSite::Strict)
         .max_age(Duration::seconds(state.config.jwt.expiration));
 
@@ -106,4 +110,53 @@ pub async fn login(
         message: "Login success".to_string(),
         data: None,
     })
+}
+
+pub async fn check_status(
+    State(state): State<Arc<AppState>>,
+    cookies: Cookies,
+) -> Result<SuccessResponse<LoginInfo>, ApiError> {
+    let token = match cookies.get("jwt_token") {
+        Some(cookie) => cookie.value().to_string(),
+        None => {
+            return Ok(SuccessResponse {
+                message: "".to_string(),
+                data: Some(LoginInfo {
+                    user: None,
+                    logged: false
+                })
+            });
+        }
+    };
+
+    let username = match state.services.auth_service.validate_token(token) {
+        Ok(username) => username,
+        Err(err) => {
+            return match err {
+                AuthenticationError::InvalidToken => {
+                    Ok(SuccessResponse {
+                        message: "".to_string(),
+                        data: Some(LoginInfo {
+                            user: None,
+                            logged: false
+                        })
+                    })
+                },
+                _ => {
+                    Err(err.into())
+                }
+            }
+        }
+    };
+    let user = state.services.user_service.get_user_by_email_or_username(&username).await?;
+
+    Ok(
+        SuccessResponse {
+            message: "".to_string(),
+            data: Some(LoginInfo {
+                user: Some(user),
+                logged: true
+            }),
+        }
+    )
 }

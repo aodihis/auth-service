@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use crate::models::user::User;
 
 #[derive(Serialize, Deserialize)]
 pub struct ActivationToken {
@@ -12,4 +13,10 @@ pub struct ActivationToken {
 #[derive(Serialize)]
 pub struct JwtToken {
     pub token: String,
+}
+
+#[derive(Serialize)]
+pub struct LoginInfo {
+    pub logged: bool,
+    pub user: Option<User>,
 }

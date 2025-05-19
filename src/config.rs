@@ -3,17 +3,23 @@ use serde::Deserialize;
 use std::env;
 
 #[derive(Debug, Deserialize)]
+pub struct AppConfig {
+    #[serde(default = "default_env")]
+    pub env: String,
+    pub verification_url: String,
+}
+
+fn default_env() -> String {
+    "dev".to_string()
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Config {
     pub server: ServerConfig,
     pub database: DatabaseConfig,
     pub jwt: JwtConfig,
     pub smtp: SmtpConfig,
     pub app: AppConfig,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct AppConfig {
-    pub verification_url: String,
 }
 
 #[derive(Debug, Deserialize)]

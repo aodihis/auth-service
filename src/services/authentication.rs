@@ -121,6 +121,19 @@ impl Authentication {
         Ok(token)
     }
 
+    pub fn validate_token(&self, token: String) -> Result<String, AuthenticationError> {
+        let claims = match decode::<Claims>(
+            &token,
+            &DecodingKey::from_secret(self.config.jwt.secret.as_bytes()),
+            &Validation::default(),
+        ) {
+            Ok(c) => c.claims,
+            Err(_) => return Err(AuthenticationError::InvalidToken),
+        };
+
+        Ok(claims.sub)
+    }
+
     fn create_token(&self, user: &User) -> Result<String, AuthenticationError> {
         debug!("Create token for user {}", user.id);
         let expiration = Utc::now()
