@@ -108,7 +108,7 @@ impl Authentication {
         user_id: &Uuid,
     ) -> Result<(), AuthenticationError> {
         self.remove_old_activation_token(user_id).await;
-        self.send_activation_token(email_service, user_id.clone())
+        self.send_activation_token(email_service, *user_id)
             .await
     }
 
@@ -135,7 +135,7 @@ impl Authentication {
         match encode(
             &Header::default(),
             &claims,
-            &EncodingKey::from_secret(&self.config.jwt.secret.as_bytes()),
+            &EncodingKey::from_secret(self.config.jwt.secret.as_bytes()),
         ) {
             Ok(token) => Ok(token),
             Err(_) => Err(AuthenticationError::InternalServerError),

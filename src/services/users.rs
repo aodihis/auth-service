@@ -52,7 +52,7 @@ impl Users {
                         return Err(UserError::AccountAlreadyExists);
                     }
                 }
-                error!("Failed to save users: {}", e.to_string());
+                error!("Failed to save users: {}", e);
                 return Err(UserError::InternalServerError);
             }
         }?;

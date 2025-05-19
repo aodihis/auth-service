@@ -1,4 +1,3 @@
-use crate::error::api::ApiError;
 use thiserror::Error;
 
 #[allow(dead_code)]

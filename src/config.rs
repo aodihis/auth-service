@@ -18,6 +18,7 @@ pub struct AppConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct ServerConfig {
+    #[serde(default = "default_host")]
     pub host: String,
     #[serde(default = "default_port")]
     pub port: u16,

@@ -66,7 +66,7 @@ impl EmailServiceBase for EmailService {
             .port(self.config.smtp.port) // e.g., "smtp.gmail.com"
             .credentials(creds);
 
-        if self.config.smtp.tls == false {
+        if !self.config.smtp.tls {
             mailer_builder = mailer_builder.tls(Tls::None);
         }
 

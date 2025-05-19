@@ -1,16 +1,12 @@
 use crate::app_state::AppState;
 use crate::error::api::ApiError;
 use crate::extractors::payload_json::PayloadJson;
-use crate::models::authenticate::JwtToken;
 use crate::models::request::{Login, RegisterUser, ResendToken, Token};
 use crate::models::response::SuccessResponse;
-use axum::Json;
 use axum::extract::State;
-use axum::response::IntoResponse;
-use serde_json::json;
 use std::sync::Arc;
-use tower_cookies::cookie::SameSite;
 use tower_cookies::cookie::time::Duration;
+use tower_cookies::cookie::SameSite;
 use tower_cookies::{Cookie, Cookies};
 use validator::Validate;
 
@@ -38,7 +34,7 @@ pub async fn register_user(
     }
     let user = state.services.user_service.create_user(payload).await?;
 
-    let _ = state
+    state
         .services
         .auth_service
         .send_activation_token(&state.services.email_service, user.id)
