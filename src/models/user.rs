@@ -10,7 +10,7 @@ pub struct User {
     #[serde(skip_serializing)]
     pub password_hash: String,
     pub username: String,
-    pub is_active: bool,
+    pub email_verified: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

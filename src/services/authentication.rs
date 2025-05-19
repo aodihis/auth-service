@@ -11,7 +11,7 @@ use chrono::{Duration, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use sqlx::{AnyPool, Error, PgPool, Row};
 use std::sync::Arc;
-use tracing::info;
+use tracing::{debug, info};
 use tracing::log::error;
 use tracing_subscriber::fmt::format;
 use uuid::Uuid;
@@ -114,7 +114,7 @@ impl Authentication {
 
     pub async fn login(&self, user: User, password: String) -> Result<String, AuthenticationError> {
         if !verify_password(&password, &user.password_hash) {
-            return Err(AuthenticationError::InternalServerError);
+            return Err(AuthenticationError::InvalidCredentials);
         }
 
         let token = self.create_token(&user)?;
@@ -122,6 +122,7 @@ impl Authentication {
     }
 
     fn create_token(&self, user: &User) -> Result<String, AuthenticationError> {
+        debug!("Create token for user {}", user.id);
         let expiration = Utc::now()
             .checked_add_signed(Duration::days(self.config.jwt.expiration))
             .expect("valid timestamp")
@@ -138,7 +139,10 @@ impl Authentication {
             &EncodingKey::from_secret(self.config.jwt.secret.as_bytes()),
         ) {
             Ok(token) => Ok(token),
-            Err(_) => Err(AuthenticationError::InternalServerError),
+            Err(err) => {
+                error!("Failed to encode token for user {}: {}", user.id, err);
+                Err(AuthenticationError::InternalServerError)
+            },
         }
     }
 

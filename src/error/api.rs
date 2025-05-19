@@ -28,7 +28,7 @@ impl fmt::Display for ApiError {
             Self::Conflict(msg) => write!(f, "{}", msg),
             Self::BadRequest(msg) => write!(f, "Bad request: {}", msg),
             Self::Unauthorized(msg) => write!(f, "Unauthorized: {}", msg),
-            Self::InternalServerError(msg) => write!(f, "Internal server error: {}", msg),
+            Self::InternalServerError(_) => write!(f, "Internal server error"),
             Self::ValidationError { message, .. } => write!(f, "Validation error: {}", message),
             Self::JsonRejection(_) => write!(f, "Failed to retrieve json"),
         }

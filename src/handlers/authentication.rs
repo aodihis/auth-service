@@ -8,6 +8,7 @@ use std::sync::Arc;
 use tower_cookies::cookie::time::Duration;
 use tower_cookies::cookie::SameSite;
 use tower_cookies::{Cookie, Cookies};
+use tracing::debug;
 use validator::Validate;
 
 pub async fn register_user(
@@ -82,13 +83,16 @@ pub async fn login(
     PayloadJson(payload): PayloadJson<Login>,
 ) -> Result<SuccessResponse<()>, ApiError> {
     let identity = payload.identity;
+    let password = payload.password;
     let user = state
         .services
         .user_service
         .get_user_by_email_or_username(&identity)
         .await?;
 
-    let token = state.services.auth_service.login(user, identity).await?;
+    let token = state.services.auth_service.login(user, password).await?;
+
+    debug!("Create cookie for jwt_token");
     let cookie = Cookie::build(("jwt_token", token))
         .path("/")
         .http_only(true)
@@ -96,6 +100,7 @@ pub async fn login(
         .same_site(SameSite::Strict)
         .max_age(Duration::seconds(state.config.jwt.expiration));
 
+    debug!("Set cookie for jwt_token");
     cookies.add(cookie.into());
     Ok(SuccessResponse {
         message: "Login success".to_string(),

@@ -28,10 +28,10 @@ impl Users {
             Ok(hash) => hash,
             Err(_) => return Err(UserError::InternalServerError),
         };
-        let is_active = false;
+        let email_verified = false;
         match sqlx::query(
             r#"
-            INSERT INTO users (id, username, email, password_hash, is_active)
+            INSERT INTO users (id, username, email, password_hash, email_verified)
             VALUES ($1, $2, $3, $4, $5)
             "#,
         )
@@ -39,7 +39,7 @@ impl Users {
         .bind(user_payload.username)
         .bind(user_payload.email.clone())
         .bind(password_hash.clone())
-        .bind(is_active)
+        .bind(email_verified)
         .execute(&self.pool)
         .await
         {
@@ -61,7 +61,7 @@ impl Users {
             email: user_payload.email,
             password_hash,
             username: "".to_string(),
-            is_active,
+            email_verified,
             created_at: Default::default(),
             updated_at: Default::default(),
         })
