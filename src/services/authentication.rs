@@ -27,7 +27,7 @@ impl Authentication {
 
     pub async fn send_activation_token(
         &self,
-        email_service: &EmailService,
+        email_service: &dyn EmailServiceBase,
         user_id: Uuid,
     ) -> Result<(), AuthenticationError> {
         info!("Sending activation token for user {}", user_id);
@@ -43,7 +43,8 @@ impl Authentication {
         );
         match self.save_activation_token(&activation_token).await {
             Ok(_) => {}
-            Err(_) => {
+            Err(err) => {
+                error!("Error saving activation token: {}", err);
                 return Err(AuthenticationError::InternalServerError);
             }
         };
@@ -104,7 +105,7 @@ impl Authentication {
 
     pub async fn resend_activation_token(
         &self,
-        email_service: &EmailService,
+        email_service: &dyn EmailServiceBase,
         user_id: &Uuid,
     ) -> Result<(), AuthenticationError> {
         self.remove_old_activation_token(user_id).await;
@@ -137,7 +138,7 @@ impl Authentication {
     fn create_token(&self, user: &User) -> Result<String, AuthenticationError> {
         debug!("Create token for user {}", user.id);
         let expiration = Utc::now()
-            .checked_add_signed(Duration::days(self.config.jwt.expiration))
+            .checked_add_signed(Duration::seconds(self.config.jwt.expiration))
             .expect("valid timestamp")
             .timestamp() as usize;
         let claims = Claims {
@@ -172,16 +173,12 @@ impl Authentication {
     }
 
     async fn verified_user_email(&self, user_id: Uuid) -> Result<(), AuthenticationError> {
-        let res = sqlx::query!(
-            r#"
-                    UPDATE users
+        let res = sqlx::query(
+            "UPDATE users
                     SET email_verified = true
-                    WHERE id = $1
-                    "#,
-            user_id
-        )
-        .execute(&self.pool)
-        .await;
+                    WHERE id = $1"
+        ).bind(user_id).execute(&self.pool).await;
+
         match res {
             Ok(_) => Ok(()),
             Err(e) => {

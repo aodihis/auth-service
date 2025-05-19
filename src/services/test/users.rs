@@ -146,11 +146,14 @@ async fn test_password_is_properly_hashed(pool: PgPool) -> Result<(), Error> {
     };
 
     // Execute
-    let created_user = user_service.create_user(test_user).await?;
+    let created_user = user_service.create_user(test_user.clone()).await?;
 
     // Assert
     assert_ne!(created_user.password_hash, password, "Password should be hashed");
     assert!(!created_user.password_hash.is_empty(), "Password hash should not be empty");
+
+    assert_eq!(created_user.username, test_user.username);
+    assert_eq!(created_user.email, test_user.email);
 
     let res = verify_password(&password, &created_user.password_hash);
     assert!(res);

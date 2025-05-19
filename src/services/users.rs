@@ -36,7 +36,7 @@ impl Users {
             "#,
         )
         .bind(user_id)
-        .bind(user_payload.username)
+        .bind(user_payload.username.clone())
         .bind(user_payload.email.clone())
         .bind(password_hash.clone())
         .bind(email_verified)
@@ -60,7 +60,7 @@ impl Users {
             id: user_id,
             email: user_payload.email,
             password_hash,
-            username: "".to_string(),
+            username: user_payload.username,
             email_verified,
             created_at: Default::default(),
             updated_at: Default::default(),
