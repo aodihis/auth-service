@@ -1,7 +1,7 @@
+use crate::models::user::User;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::models::user::User;
 
 #[derive(Serialize, Deserialize)]
 pub struct ActivationToken {

@@ -11,8 +11,8 @@ use chrono::{Duration, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use sqlx::{AnyPool, Error, PgPool, Row};
 use std::sync::Arc;
-use tracing::{debug, info};
 use tracing::log::error;
+use tracing::{debug, info};
 use tracing_subscriber::fmt::format;
 use uuid::Uuid;
 pub struct Authentication {
@@ -109,8 +109,7 @@ impl Authentication {
         user_id: &Uuid,
     ) -> Result<(), AuthenticationError> {
         self.remove_old_activation_token(user_id).await;
-        self.send_activation_token(email_service, *user_id)
-            .await
+        self.send_activation_token(email_service, *user_id).await
     }
 
     pub async fn login(&self, user: User, password: String) -> Result<String, AuthenticationError> {
@@ -156,7 +155,7 @@ impl Authentication {
             Err(err) => {
                 error!("Failed to encode token for user {}: {}", user.id, err);
                 Err(AuthenticationError::InternalServerError)
-            },
+            }
         }
     }
 
@@ -176,8 +175,11 @@ impl Authentication {
         let res = sqlx::query(
             "UPDATE users
                     SET email_verified = true
-                    WHERE id = $1"
-        ).bind(user_id).execute(&self.pool).await;
+                    WHERE id = $1",
+        )
+        .bind(user_id)
+        .execute(&self.pool)
+        .await;
 
         match res {
             Ok(_) => Ok(()),

@@ -31,10 +31,11 @@ async fn test_create_user_success(pool: PgPool) -> Result<(), Error> {
     assert_ne!(created_user.password_hash, test_user.password); // Password should be hashed
 
     // Verify the user exists in the database
-    let db_user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = $1 OR email = $1")
-        .bind(test_user.email.clone())
-        .fetch_one(&pool)
-        .await?;
+    let db_user =
+        sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = $1 OR email = $1")
+            .bind(test_user.email.clone())
+            .fetch_one(&pool)
+            .await?;
 
     assert_eq!(db_user.id, created_user.id);
     assert_eq!(db_user.email, test_user.email);
@@ -82,10 +83,10 @@ async fn test_create_user_duplicate_email(pool: PgPool) -> Result<(), Error> {
         r#"SELECT COUNT(*) as count FROM users WHERE email = $1"#,
         "duplicate@example.com"
     )
-        .fetch_one(&pool)
-        .await?
-        .count
-        .unwrap_or(0);
+    .fetch_one(&pool)
+    .await?
+    .count
+    .unwrap_or(0);
 
     assert_eq!(count, 1, "Expected only one user with this email");
 
@@ -136,7 +137,6 @@ async fn test_password_is_properly_hashed(pool: PgPool) -> Result<(), Error> {
     let config = Arc::new(load_config()?);
     let user_service = Users::new(pool.clone(), config);
 
-
     // Create test data
     let password = "SecurePassword123!";
     let test_user = RegisterUser {
@@ -149,8 +149,14 @@ async fn test_password_is_properly_hashed(pool: PgPool) -> Result<(), Error> {
     let created_user = user_service.create_user(test_user.clone()).await?;
 
     // Assert
-    assert_ne!(created_user.password_hash, password, "Password should be hashed");
-    assert!(!created_user.password_hash.is_empty(), "Password hash should not be empty");
+    assert_ne!(
+        created_user.password_hash, password,
+        "Password should be hashed"
+    );
+    assert!(
+        !created_user.password_hash.is_empty(),
+        "Password hash should not be empty"
+    );
 
     assert_eq!(created_user.username, test_user.username);
     assert_eq!(created_user.email, test_user.email);
@@ -182,21 +188,30 @@ async fn test_get_user_by_email_or_username(pool: PgPool) -> Result<(), Error> {
     let result_by_email = user_service
         .get_user_by_email_or_username(&test_user.email)
         .await;
-    assert!(result_by_email.is_ok(), "Expected user lookup by email to succeed");
+    assert!(
+        result_by_email.is_ok(),
+        "Expected user lookup by email to succeed"
+    );
     assert_eq!(result_by_email?.email, test_user.email);
 
     // Test by username
     let result_by_username = user_service
         .get_user_by_email_or_username(&test_user.username)
         .await;
-    assert!(result_by_username.is_ok(), "Expected user lookup by username to succeed");
+    assert!(
+        result_by_username.is_ok(),
+        "Expected user lookup by username to succeed"
+    );
     assert_eq!(result_by_username?.username, test_user.username);
 
     // Test for non-existent user
     let result_invalid = user_service
         .get_user_by_email_or_username("nonexistent")
         .await;
-    assert!(result_invalid.is_err(), "Expected lookup to fail for nonexistent user");
+    assert!(
+        result_invalid.is_err(),
+        "Expected lookup to fail for nonexistent user"
+    );
     if let Err(UserError::UserNotFound(_)) = result_invalid {
         // Expected error
     } else {
@@ -205,5 +220,3 @@ async fn test_get_user_by_email_or_username(pool: PgPool) -> Result<(), Error> {
 
     Ok(())
 }
-
-

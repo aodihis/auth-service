@@ -24,7 +24,7 @@ test:
 
 ## Format code
 fmt:
-	cargo fmt
+	cargo fmt --all
 
 ## Lint code
 lint:

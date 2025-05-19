@@ -1,17 +1,17 @@
 use crate::app_state::AppState;
 use crate::error::api::ApiError;
+use crate::error::authentication::AuthenticationError;
 use crate::extractors::payload_json::PayloadJson;
+use crate::models::authenticate::LoginInfo;
 use crate::models::request::{Login, RegisterUser, ResendToken, Token};
 use crate::models::response::SuccessResponse;
 use axum::extract::State;
 use std::sync::Arc;
-use tower_cookies::cookie::time::Duration;
 use tower_cookies::cookie::SameSite;
+use tower_cookies::cookie::time::Duration;
 use tower_cookies::{Cookie, Cookies};
 use tracing::debug;
 use validator::Validate;
-use crate::error::authentication::AuthenticationError;
-use crate::models::authenticate::LoginInfo;
 
 pub async fn register_user(
     State(state): State<Arc<AppState>>,
@@ -123,8 +123,8 @@ pub async fn check_status(
                 message: "".to_string(),
                 data: Some(LoginInfo {
                     user: None,
-                    logged: false
-                })
+                    logged: false,
+                }),
             });
         }
     };
@@ -133,30 +133,28 @@ pub async fn check_status(
         Ok(username) => username,
         Err(err) => {
             return match err {
-                AuthenticationError::InvalidToken => {
-                    Ok(SuccessResponse {
-                        message: "".to_string(),
-                        data: Some(LoginInfo {
-                            user: None,
-                            logged: false
-                        })
-                    })
-                },
-                _ => {
-                    Err(err.into())
-                }
-            }
+                AuthenticationError::InvalidToken => Ok(SuccessResponse {
+                    message: "".to_string(),
+                    data: Some(LoginInfo {
+                        user: None,
+                        logged: false,
+                    }),
+                }),
+                _ => Err(err.into()),
+            };
         }
     };
-    let user = state.services.user_service.get_user_by_email_or_username(&username).await?;
+    let user = state
+        .services
+        .user_service
+        .get_user_by_email_or_username(&username)
+        .await?;
 
-    Ok(
-        SuccessResponse {
-            message: "".to_string(),
-            data: Some(LoginInfo {
-                user: Some(user),
-                logged: true
-            }),
-        }
-    )
+    Ok(SuccessResponse {
+        message: "".to_string(),
+        data: Some(LoginInfo {
+            user: Some(user),
+            logged: true,
+        }),
+    })
 }

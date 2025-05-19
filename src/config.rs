@@ -77,8 +77,6 @@ pub fn load_config() -> Result<Config, ConfigError> {
         dotenv::from_filename(".env").ok();
     }
 
-
-
     let config = RawConfig::builder()
         .add_source(File::with_name(&format!("config/{}", run_env)).required(false))
         .add_source(Environment::default().separator("_"))

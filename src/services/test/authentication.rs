@@ -1,23 +1,23 @@
-use std::pin::Pin;
-use std::sync::Arc;
 use crate::config::load_config;
 use crate::error::authentication::AuthenticationError;
+use crate::error::email::EmailError;
+use crate::models::claims::Claims;
 use crate::models::request::RegisterUser;
 use crate::services::authentication::Authentication;
+use crate::services::traits::EmailServiceBase;
 use crate::services::users::Users;
 use anyhow::Error;
 use chrono::{Duration, Utc};
-use jsonwebtoken::{encode, EncodingKey, Header};
+use jsonwebtoken::{EncodingKey, Header, encode};
 use sqlx::PgPool;
-use crate::error::email::EmailError;
-use crate::models::claims::Claims;
-use crate::services::traits::EmailServiceBase;
+use std::pin::Pin;
+use std::sync::Arc;
 
 #[sqlx::test]
 async fn test_verify_email(pool: PgPool) -> Result<(), Error> {
-    use std::sync::Arc;
     use chrono::{Duration, Utc};
     use sqlx::query;
+    use std::sync::Arc;
 
     // Setup
     let config = Arc::new(load_config()?);
@@ -41,18 +41,20 @@ async fn test_verify_email(pool: PgPool) -> Result<(), Error> {
         VALUES ($1, $2, $3)
         "#,
     )
-        .bind(token)
-        .bind(created_user.id)
-        .bind(expires_at)
-        .execute(&pool)
-        .await?;
+    .bind(token)
+    .bind(created_user.id)
+    .bind(expires_at)
+    .execute(&pool)
+    .await?;
 
     // Test: valid token should pass
     let result = authentication_service.verify_email(token.to_string()).await;
     assert!(result.is_ok(), "Expected token verification to succeed");
 
     // Test: invalid token
-    let invalid_result = authentication_service.verify_email("nonexistent-token".to_string()).await;
+    let invalid_result = authentication_service
+        .verify_email("nonexistent-token".to_string())
+        .await;
     assert!(
         matches!(invalid_result, Err(AuthenticationError::InvalidToken)),
         "Expected InvalidToken error"
@@ -67,13 +69,15 @@ async fn test_verify_email(pool: PgPool) -> Result<(), Error> {
         VALUES ($1, $2, $3)
         "#,
     )
-        .bind(expired_token)
-        .bind(created_user.id)
-        .bind(expired_time)
-        .execute(&pool)
-        .await?;
+    .bind(expired_token)
+    .bind(created_user.id)
+    .bind(expired_time)
+    .execute(&pool)
+    .await?;
 
-    let expired_result = authentication_service.verify_email(expired_token.to_string()).await;
+    let expired_result = authentication_service
+        .verify_email(expired_token.to_string())
+        .await;
     assert!(
         matches!(expired_result, Err(AuthenticationError::InvalidToken)),
         "Expected InvalidToken for expired token"
@@ -99,14 +103,24 @@ async fn test_login_success_and_invalid_password(pool: PgPool) -> Result<(), Err
     let created_user = user_service.create_user(test_user.clone()).await?;
 
     // Correct password
-    let token_result = authentication_service.login(created_user.clone(), test_user.password.clone()).await;
-    assert!(token_result.is_ok(), "Expected login with correct password to succeed");
+    let token_result = authentication_service
+        .login(created_user.clone(), test_user.password.clone())
+        .await;
+    assert!(
+        token_result.is_ok(),
+        "Expected login with correct password to succeed"
+    );
     let token = token_result?;
 
     // Incorrect password
-    let bad_password_result = authentication_service.login(created_user, "WrongPassword!".to_string()).await;
+    let bad_password_result = authentication_service
+        .login(created_user, "WrongPassword!".to_string())
+        .await;
     assert!(
-        matches!(bad_password_result, Err(AuthenticationError::InvalidCredentials)),
+        matches!(
+            bad_password_result,
+            Err(AuthenticationError::InvalidCredentials)
+        ),
         "Expected InvalidCredentials error"
     );
 
@@ -165,15 +179,18 @@ async fn test_validate_token(pool: PgPool) -> Result<(), Error> {
     Ok(())
 }
 
-struct EmailService {
-
-}
+struct EmailService {}
 
 impl EmailServiceBase for EmailService {
-    fn send_email(&self, _: String, _: Vec<String>, _: Vec<String>, _: String, _: String) -> Pin<Box<dyn Future<Output = Result<(), EmailError>> + Send>> {
-        Box::pin(async move {
-            Ok(())
-        })
+    fn send_email(
+        &self,
+        _: String,
+        _: Vec<String>,
+        _: Vec<String>,
+        _: String,
+        _: String,
+    ) -> Pin<Box<dyn Future<Output = Result<(), EmailError>> + Send>> {
+        Box::pin(async move { Ok(()) })
     }
 }
 #[sqlx::test]
@@ -191,7 +208,9 @@ async fn test_send_activation_token(pool: PgPool) -> Result<(), Error> {
     };
     let created_user = user_service.create_user(test_user.clone()).await?;
 
-    let res = authentication_service.send_activation_token(&email_service, created_user.id).await;
+    let res = authentication_service
+        .send_activation_token(&email_service, created_user.id)
+        .await;
     assert!(res.is_ok(), "Expected activation token to succeed");
 
     let result = sqlx::query(
@@ -200,9 +219,9 @@ async fn test_send_activation_token(pool: PgPool) -> Result<(), Error> {
                     WHERE user_id = $1
                     "#,
     )
-        .bind(created_user.id)
-        .fetch_optional(&pool)
-        .await;
+    .bind(created_user.id)
+    .fetch_optional(&pool)
+    .await;
 
     assert!(result.is_ok());
     let result = result?;
@@ -210,7 +229,6 @@ async fn test_send_activation_token(pool: PgPool) -> Result<(), Error> {
     assert!(result.is_some());
     Ok(())
 }
-
 
 #[sqlx::test]
 async fn test_resend_activation_token(pool: PgPool) -> Result<(), Error> {
@@ -227,9 +245,13 @@ async fn test_resend_activation_token(pool: PgPool) -> Result<(), Error> {
     };
     let created_user = user_service.create_user(test_user.clone()).await?;
 
-    authentication_service.send_activation_token(&email_service, created_user.id).await?;
+    authentication_service
+        .send_activation_token(&email_service, created_user.id)
+        .await?;
 
-    let res = authentication_service.resend_activation_token(&email_service, &created_user.id).await;
+    let res = authentication_service
+        .resend_activation_token(&email_service, &created_user.id)
+        .await;
 
     assert!(res.is_ok(), "Expected send token to succeed");
     Ok(())

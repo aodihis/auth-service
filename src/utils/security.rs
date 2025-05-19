@@ -18,8 +18,8 @@ pub fn verify_password(password: &str, hashed_password: &str) -> bool {
         Ok(h) => h,
         Err(err) => {
             error!("Failed to parse hashed password: {}", err);
-            return false
-        },
+            return false;
+        }
     };
     debug!("Verifying password");
     Argon2::default()
