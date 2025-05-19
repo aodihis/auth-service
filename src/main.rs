@@ -5,7 +5,6 @@ use crate::services::authentication::Authentication;
 use crate::services::email::EmailService;
 use crate::services::users::Users;
 use axum::Router;
-use sqlx::any::install_default_drivers;
 use sqlx::postgres::PgPoolOptions;
 use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr;
@@ -40,7 +39,6 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    install_default_drivers();
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(config.database.url.as_str())

@@ -8,7 +8,7 @@ ifneq (,$(wildcard .env))
 	export
 endif
 
-.PHONY: run build test fmt lint clean migrate create-migration redo
+.PHONY: run build test fmt lint clean migrate migrate_test create-migration redo
 
 ## Run the app
 run:
@@ -41,6 +41,20 @@ migrate:
 		exit 1; \
 	fi
 	sqlx migrate run
+
+migrate_test:
+	@if [ -f .env.test ]; then \
+		export $$(grep -v '^#' .env.test | xargs); \
+		if [ -z "$$DATABASE_URL" ]; then \
+			echo "DATABASE_URL is not set in .env.test file."; \
+			exit 1; \
+		fi; \
+		echo "Running migrations with test database from .env.test"; \
+		sqlx migrate run; \
+	else \
+		echo ".env.test file not found."; \
+		exit 1; \
+	fi
 
 ## Create a new migration: make create-migration name=create_users
 create-migration:

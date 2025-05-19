@@ -2,7 +2,7 @@ use serde::Deserialize;
 use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
-#[derive(Deserialize, Debug, Validate)]
+#[derive(Deserialize, Debug, Validate, Clone)]
 pub struct RegisterUser {
     #[validate(email(message = "Invalid email format"))]
     pub email: String,

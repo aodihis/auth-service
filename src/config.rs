@@ -69,8 +69,15 @@ fn default_jwt_expiration() -> i64 {
 
 pub fn load_config() -> Result<Config, ConfigError> {
     // Load environment variables from .env file
-    dotenv::dotenv().ok();
-    let run_env = env::var("ENV").unwrap_or_else(|_| "dev".into());
+    let mut run_env = env::var("ENV").unwrap_or_else(|_| "dev".into());
+    if cfg!(test) {
+        dotenv::from_filename(".env.test").ok();
+        run_env = "test".into();
+    } else {
+        dotenv::from_filename(".env").ok();
+    }
+
+
 
     let config = RawConfig::builder()
         .add_source(File::with_name(&format!("config/{}", run_env)).required(false))

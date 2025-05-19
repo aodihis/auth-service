@@ -1,0 +1,21 @@
+server:
+  host: "127.0.0.1"
+  port: 3000
+
+database:
+  pool_size: 10
+
+jwt:
+  expiration: 1209600
+
+smtp:
+  username: "test"
+  password: "test"
+  from_name: "noreply"
+  from_email: "noreply@example.com"
+  host: "sandbox.smtp.mailtrap.io"
+  port: 2525
+  tls: false
+
+app:
+  verification_url: "http://localhost/verify"
