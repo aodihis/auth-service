@@ -52,6 +52,12 @@ pub struct Login {
     pub identity: String,
     pub password: String,
 }
+
+pub struct Permission {
+    pub resource: String,
+    pub action: String,
+    pub description: String,
+}
 #[cfg(test)]
 mod tests {
     use super::*;

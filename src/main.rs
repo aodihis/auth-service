@@ -1,7 +1,7 @@
 use crate::app_state::{AppState, Services};
 use crate::config::load_config;
 use crate::routes::error::not_found_handler;
-use crate::services::authentication::Authentication;
+use crate::services::authentications::Authentication;
 use crate::services::email::EmailService;
 use crate::services::users::Users;
 use axum::Router;

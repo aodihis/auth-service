@@ -3,7 +3,7 @@ use crate::error::authentication::AuthenticationError;
 use crate::error::email::EmailError;
 use crate::models::claims::Claims;
 use crate::models::request::RegisterUser;
-use crate::services::authentication::Authentication;
+use crate::services::authentications::Authentication;
 use crate::services::traits::EmailServiceBase;
 use crate::services::users::Users;
 use anyhow::Error;

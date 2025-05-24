@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::services::authentication::Authentication;
+use crate::services::authentications::Authentication;
 use crate::services::email::EmailService;
 use crate::services::users::Users;
 use std::sync::Arc;

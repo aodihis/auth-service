@@ -6,40 +6,24 @@ CREATE TABLE IF NOT EXISTS roles
     PRIMARY
     KEY,
     name
-    VARCHAR
-(
-    50
-) NOT NULL UNIQUE,
+    VARCHAR(50) NOT NULL UNIQUE,
     description TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-                             );
+);
 
 -- Permissions table to store available permissions
 CREATE TABLE IF NOT EXISTS permissions
 (
-    id
-    SERIAL
-    PRIMARY
-    KEY,
-    name
-    VARCHAR
-(
-    100
-) NOT NULL UNIQUE,
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
-    resource VARCHAR
-(
-    100
-) NOT NULL,
-    action VARCHAR
-(
-    50
-) NOT NULL,
+    resource VARCHAR(100) NOT NULL,
+    action VARCHAR(50) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                             UNIQUE (resource, action)
-    );
+    UNIQUE (resource, action)
+);
 
 -- Role permissions junction table
 CREATE TABLE IF NOT EXISTS role_permissions
@@ -49,19 +33,11 @@ CREATE TABLE IF NOT EXISTS role_permissions
     NOT
     NULL
     REFERENCES
-    roles
-(
-    id
-) ON DELETE CASCADE,
-    permission_id INTEGER NOT NULL REFERENCES permissions
-(
-    id
-)
-  ON DELETE CASCADE,
-    created_at TIMESTAMP
-  WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (role_id, permission_id)
-    );
+    roles(id) ON DELETE CASCADE,
+    permission_id INTEGER NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (role_id, permission_id)
+);
 
 -- User roles junction table (assumes users table exists)
 CREATE TABLE IF NOT EXISTS user_roles

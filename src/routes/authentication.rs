@@ -2,7 +2,7 @@ use crate::AppState;
 use crate::handlers::authentication::{
     check_status, login, register_user, resend_token, verify_user,
 };
-use crate::services::authentication::Authentication as AuthenticationService;
+use crate::services::authentications::Authentication as AuthenticationService;
 use axum::Router;
 use axum::routing::{get, post};
 use std::sync::Arc;
