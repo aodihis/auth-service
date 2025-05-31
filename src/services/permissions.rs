@@ -6,6 +6,7 @@ use crate::config::Config;
 use crate::error::authorization::AuthorizationError;
 use crate::error::user::UserError;
 use crate::models::request::Permission;
+use crate::models::authorization::Permission as PermissionModel;
 
 pub struct Permissions {
     pool: PgPool,
@@ -45,6 +46,39 @@ impl Permissions {
                 error!("{}", e.to_string());
                 Err(AuthorizationError::InternalServerError)
             },
+        }
+    }
+
+    pub async fn delete(&self, id: i32) -> Result<(), AuthorizationError> {
+        let res = sqlx::query("DELETE FROM permissions WHERE id = $1")
+                .bind(id)
+                .execute(&self.pool).await;
+
+        match res {
+            Ok(res) => {
+                if res.rows_affected() == 0 {
+                    debug!("Delete failed: Permission with id {} not found", id);
+                    Err(AuthorizationError::NotFound)
+                } else {
+                    Ok(())
+                }
+            }
+            Err(e) => {
+                error!("Database error while deleting permission id {}: {:?}", id, e);
+                Err(AuthorizationError::InternalServerError)
+            }
+        }
+    }
+
+    pub async fn list(&self) -> Result<Vec<PermissionModel>, AuthorizationError> {
+        let res :Result<Vec<PermissionModel>, Error> = sqlx::query_as("SELECT * FROM permissions").fetch_all(&self.pool).await;
+
+        match res {
+            Ok(rows) => Ok(rows),
+            Err(err) => {
+                error!("{}", err.to_string());
+                Err(AuthorizationError::InternalServerError)
+            }
         }
     }
 }

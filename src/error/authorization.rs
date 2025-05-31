@@ -8,4 +8,7 @@ pub enum AuthorizationError {
 
     #[error("Internal Server Error")]
     InternalServerError,
+
+    #[error("Not found")]
+    NotFound
 }
