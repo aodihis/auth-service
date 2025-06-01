@@ -18,18 +18,21 @@ impl Permissions {
         Permissions { pool, config }
     }
 
-    pub async fn add(&self, permission: Permission) -> Result<(), AuthorizationError> {
+    pub async fn add(&self, permission: Permission) -> Result<PermissionModel, AuthorizationError> {
 
-        let res = sqlx::query("INSERT INTO permissions (name, description, resource, action) VALUES($1, $2, $3, $4)")
+        let res = sqlx::query_as(
+            "INSERT INTO permissions (name, description, resource, action) VALUES($1, $2, $3, $4)\
+                RETURNING *
+            ")
             .bind(format!("{}:{}", permission.resource, permission.action))
             .bind(permission.description)
             .bind(permission.resource)
             .bind(permission.action)
-            .execute(&self.pool).await;
+            .fetch_one(&self.pool).await;
 
         match res {
-            Ok(_) => {
-                Ok(())
+            Ok(permission) => {
+                Ok(permission)
             }
             Err(Error::Database(db_err)) => {
                 if let pg_err = db_err.downcast_ref::<PgDatabaseError>() {

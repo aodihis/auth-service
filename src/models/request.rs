@@ -58,6 +58,12 @@ pub struct Permission {
     pub action: String,
     pub description: String,
 }
+
+pub struct Role {
+    pub name: String,
+    pub description: String,
+    pub permission_ids: Vec<i32>,
+}
 #[cfg(test)]
 mod tests {
     use super::*;

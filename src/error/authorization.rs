@@ -6,6 +6,9 @@ pub enum AuthorizationError {
     #[error("Permission exist")]
     PermissionAlreadyExist,
 
+    #[error("Role exist")]
+    RoleAlreadyExist,
+
     #[error("Internal Server Error")]
     InternalServerError,
 
