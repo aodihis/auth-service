@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use sqlx::{Error, PgPool};
 use sqlx::postgres::{PgDatabaseError, PgQueryResult};
-use tracing::{debug, error};
+use tracing::{debug, error, info};
 use crate::config::Config;
 use crate::error::authorization::AuthorizationError;
 use crate::error::user::UserError;
@@ -82,6 +82,45 @@ impl Permissions {
                 error!("{}", err.to_string());
                 Err(AuthorizationError::InternalServerError)
             }
+        }
+    }
+
+    pub async fn update(&self, id: i32, permission: Permission) -> Result<PermissionModel, AuthorizationError> {
+        let res = sqlx::query_as(
+            "UPDATE permissions SET name = $1, description = $2,
+                resource = $3, action = $4
+                WHERE id = $5
+                RETURNING *
+            ")
+            .bind(format!("{}:{}", permission.resource, permission.action))
+            .bind(permission.description)
+            .bind(permission.resource)
+            .bind(permission.action)
+            .bind(id)
+            .fetch_optional(&self.pool).await;
+
+        match res {
+            Ok(Some(permission)) => {
+                Ok(permission)
+            },
+            Ok(None) => {
+                info!("Update failed: role not found: {}", id);
+                Err(AuthorizationError::NotFound)
+            },
+            Err(Error::Database(db_err)) => {
+                if let pg_err = db_err.downcast_ref::<PgDatabaseError>() {
+                    if pg_err.code() == "23505" {
+                        debug!("Failed to update permission id {}: duplicate", id);
+                        return Err(AuthorizationError::PermissionAlreadyExist);
+                    }
+                }
+                error!("Failed to update permission id {}: {}", id, db_err.to_string());
+                Err(AuthorizationError::InternalServerError)
+            },
+            Err(e) => {
+                error!("Failed to update permission id {}: {}", id, e.to_string());
+                Err(AuthorizationError::InternalServerError)
+            },
         }
     }
 }
