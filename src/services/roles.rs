@@ -1,10 +1,10 @@
-use std::sync::Arc;
-use sqlx::PgPool;
-use tracing::{debug, error, info};
 use crate::config::Config;
 use crate::error::authorization::AuthorizationError;
-use crate::models::request::Role;
 use crate::models::authorization::Role as RoleModel;
+use crate::models::request::Role;
+use sqlx::PgPool;
+use std::sync::Arc;
+use tracing::{debug, error, info};
 
 pub struct Roles {
     pool: PgPool,
@@ -12,17 +12,18 @@ pub struct Roles {
 }
 
 impl Roles {
-
     pub fn new(pool: PgPool, config: Arc<Config>) -> Self {
         Self { pool, config }
     }
 
     pub async fn get(&self, id: i32) -> Result<RoleModel, AuthorizationError> {
         let res = sqlx::query_as::<_, RoleModel>("SELECT * FROM roles WHERE id = $1")
-        .bind(id).fetch_one(&self.pool).await;
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await;
 
         match res {
-            Ok(role)=> Ok(role),
+            Ok(role) => Ok(role),
             Err(sqlx::Error::RowNotFound) => {
                 info!("Role not found: {}", id);
                 Err(AuthorizationError::NotFound)
@@ -38,15 +39,22 @@ impl Roles {
     pub async fn add(&self, role: Role) -> Result<RoleModel, AuthorizationError> {
         let res = sqlx::query_as::<_, RoleModel>(
             "INSERT INTO roles (name, description) VALUES ($1, $2)\
-            RETURNING id, name, description"
-        ).bind(role.name.clone()).bind(role.description).fetch_one(&self.pool).await;
+            RETURNING id, name, description",
+        )
+        .bind(role.name.clone())
+        .bind(role.description)
+        .fetch_one(&self.pool)
+        .await;
 
         match res {
             Ok(role) => Ok(role),
             Err(err) => {
                 if let sqlx::Error::Database(db_err) = &err {
                     if db_err.constraint() == Some("roles_name_key") {
-                        info!("Insert role failed - Duplicated: Role with name {}", role.name);
+                        info!(
+                            "Insert role failed - Duplicated: Role with name {}",
+                            role.name
+                        );
                         return Err(AuthorizationError::RoleAlreadyExist);
                     }
                 }
@@ -59,7 +67,8 @@ impl Roles {
     pub async fn delete(&self, id: i32) -> Result<(), AuthorizationError> {
         let res = sqlx::query("DELETE FROM roles WHERE id = $1")
             .bind(id)
-            .execute(&self.pool).await;
+            .execute(&self.pool)
+            .await;
 
         match res {
             Ok(res) => {
@@ -83,8 +92,13 @@ impl Roles {
                 SET name = $1, description = $2
                 WHERE id = $3
                 RETURNING id, name, description
-                "
-        ).bind(role.name.clone()).bind(role.description).bind(id).fetch_optional(&self.pool).await;
+                ",
+        )
+        .bind(role.name.clone())
+        .bind(role.description)
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await;
 
         match res {
             Ok(Some(role)) => Ok(role),

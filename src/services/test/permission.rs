@@ -1,11 +1,11 @@
 use crate::config::load_config;
+use crate::error::authorization::AuthorizationError;
 use crate::models::request::Permission as PermissionRequest;
 use crate::services::permissions::Permissions;
 use anyhow::Error;
 use sqlx::PgPool;
 use std::sync::Arc;
 use tracing::info;
-use crate::error::authorization::AuthorizationError;
 
 #[sqlx::test()]
 async fn test_add_list_delete_permission(pool: PgPool) -> Result<(), Error> {
@@ -17,7 +17,6 @@ async fn test_add_list_delete_permission(pool: PgPool) -> Result<(), Error> {
     let delete_result = permission_service.delete(87).await;
     assert!(delete_result.is_err(), "Service will return an error");
 
-
     // Add permission
     let perm = PermissionRequest {
         resource: "permission".to_string(),
@@ -26,7 +25,10 @@ async fn test_add_list_delete_permission(pool: PgPool) -> Result<(), Error> {
     };
 
     let add_result = permission_service.add(perm).await;
-    assert!(add_result.is_ok(), "Permission should be added successfully");
+    assert!(
+        add_result.is_ok(),
+        "Permission should be added successfully"
+    );
 
     // List permissions
     let list = permission_service.list().await;
@@ -84,7 +86,6 @@ async fn test_update_permission_success(pool: PgPool) -> Result<(), Error> {
     Ok(())
 }
 
-
 #[sqlx::test]
 async fn test_update_permission_not_found(pool: PgPool) -> Result<(), Error> {
     let config = Arc::new(load_config()?);
@@ -102,7 +103,6 @@ async fn test_update_permission_not_found(pool: PgPool) -> Result<(), Error> {
 
     Ok(())
 }
-
 
 #[sqlx::test]
 async fn test_update_permission_duplicate(pool: PgPool) -> Result<(), Error> {
@@ -133,6 +133,9 @@ async fn test_update_permission_duplicate(pool: PgPool) -> Result<(), Error> {
     // Attempt to update perm1 to have same name as perm2
     let result = permission_service.update(inserted1.id, perm2).await;
 
-    assert!(matches!(result, Err(AuthorizationError::PermissionAlreadyExist)));
+    assert!(matches!(
+        result,
+        Err(AuthorizationError::PermissionAlreadyExist)
+    ));
     Ok(())
 }

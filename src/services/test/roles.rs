@@ -1,14 +1,13 @@
-use std::sync::Arc;
-use anyhow::Error;
-use sqlx::PgPool;
 use crate::config::load_config;
 use crate::error::authorization::AuthorizationError;
 use crate::models::request::Role;
 use crate::services::roles::Roles;
+use anyhow::Error;
+use sqlx::PgPool;
+use std::sync::Arc;
 
 #[sqlx::test()]
 async fn test_add_role_success(pool: PgPool) -> Result<(), Error> {
-
     let config = Arc::new(load_config()?);
     let roles_service = Roles::new(pool.clone(), config);
 
@@ -30,8 +29,6 @@ async fn test_add_role_success(pool: PgPool) -> Result<(), Error> {
 
 #[sqlx::test()]
 async fn test_add_duplicate_role(pool: PgPool) -> Result<(), Error> {
-
-
     let config = Arc::new(load_config()?);
     let roles_service = Roles::new(pool.clone(), config);
 
@@ -51,14 +48,16 @@ async fn test_add_duplicate_role(pool: PgPool) -> Result<(), Error> {
 
     let result = roles_service.add(role).await;
 
-    assert!(matches!(result, Err(AuthorizationError::RoleAlreadyExist)), "Should return an error");
+    assert!(
+        matches!(result, Err(AuthorizationError::RoleAlreadyExist)),
+        "Should return an error"
+    );
 
     Ok(())
 }
 
 #[sqlx::test()]
 async fn test_get_role_success(pool: PgPool) -> Result<(), Error> {
-
     let config = Arc::new(load_config()?);
     let roles_service = Roles::new(pool.clone(), config);
 
@@ -166,4 +165,3 @@ async fn test_delete_role_not_found(pool: PgPool) -> Result<(), Error> {
     assert!(matches!(result, Err(AuthorizationError::NotFound)));
     Ok(())
 }
-

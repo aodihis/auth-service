@@ -2,7 +2,6 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AuthorizationError {
-
     #[error("Permission exist")]
     PermissionAlreadyExist,
 
@@ -13,5 +12,5 @@ pub enum AuthorizationError {
     InternalServerError,
 
     #[error("Not found")]
-    NotFound
+    NotFound,
 }
