@@ -1,9 +1,8 @@
 use crate::config::Config;
 use crate::error::authorization::AuthorizationError;
-use crate::error::user::UserError;
 use crate::models::authorization::Permission as PermissionModel;
 use crate::models::request::Permission;
-use sqlx::postgres::{PgDatabaseError, PgQueryResult};
+use sqlx::postgres::PgDatabaseError;
 use sqlx::{Error, PgPool};
 use std::sync::Arc;
 use tracing::{debug, error, info};
@@ -34,13 +33,13 @@ impl Permissions {
         match res {
             Ok(permission) => Ok(permission),
             Err(Error::Database(db_err)) => {
-                if let pg_err = db_err.downcast_ref::<PgDatabaseError>() {
-                    debug!("{}", pg_err.to_string());
-                    if pg_err.code() == "23505" {
-                        // Unique constraint violation
-                        return Err(AuthorizationError::PermissionAlreadyExist);
-                    }
+                let pg_err = db_err.downcast_ref::<PgDatabaseError>();
+
+                if pg_err.code() == "23505" {
+                    debug!("Duplicate permission: {}", pg_err.to_string());
+                    return Err(AuthorizationError::PermissionAlreadyExist);
                 }
+
                 error!("{}", db_err.to_string());
                 Err(AuthorizationError::InternalServerError)
             }
@@ -117,12 +116,12 @@ impl Permissions {
                 Err(AuthorizationError::NotFound)
             }
             Err(Error::Database(db_err)) => {
-                if let pg_err = db_err.downcast_ref::<PgDatabaseError>() {
-                    if pg_err.code() == "23505" {
-                        debug!("Failed to update permission id {}: duplicate", id);
-                        return Err(AuthorizationError::PermissionAlreadyExist);
-                    }
+                let pg_err = db_err.downcast_ref::<PgDatabaseError>();
+                if pg_err.code() == "23505" {
+                    debug!("Failed to update permission id {}: duplicate", id);
+                    return Err(AuthorizationError::PermissionAlreadyExist);
                 }
+
                 error!(
                     "Failed to update permission id {}: {}",
                     id,

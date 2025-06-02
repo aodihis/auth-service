@@ -2,18 +2,15 @@ use crate::config::Config;
 use crate::error::authentication::AuthenticationError;
 use crate::models::authenticate::ActivationToken;
 use crate::models::claims::Claims;
-use crate::models::request::RegisterUser;
 use crate::models::user::User;
-use crate::services::email::EmailService;
 use crate::services::traits::EmailServiceBase;
-use crate::utils::security::{hash_password, verify_password};
+use crate::utils::security::verify_password;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
-use sqlx::{AnyPool, Error, PgPool, Row};
+use sqlx::{Error, PgPool, Row};
 use std::sync::Arc;
 use tracing::log::error;
 use tracing::{debug, info};
-use tracing_subscriber::fmt::format;
 use uuid::Uuid;
 pub struct Authentication {
     pool: PgPool,

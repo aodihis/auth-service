@@ -1,5 +1,4 @@
 use crate::config::Config;
-use crate::error::authentication::AuthenticationError;
 use crate::error::user::UserError;
 use crate::models::request::RegisterUser;
 use crate::models::user::User;

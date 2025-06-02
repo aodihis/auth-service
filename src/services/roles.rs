@@ -4,7 +4,7 @@ use crate::models::authorization::Role as RoleModel;
 use crate::models::request::Role;
 use sqlx::PgPool;
 use std::sync::Arc;
-use tracing::{debug, error, info};
+use tracing::{error, info};
 
 pub struct Roles {
     pool: PgPool,
