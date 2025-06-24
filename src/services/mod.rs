@@ -7,3 +7,4 @@ pub mod users;
 
 #[cfg(test)]
 mod test;
+mod role_permissions;
