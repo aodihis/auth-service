@@ -5,6 +5,6 @@ mod roles;
 mod traits;
 pub mod users;
 
+mod role_permissions;
 #[cfg(test)]
 mod test;
-mod role_permissions;

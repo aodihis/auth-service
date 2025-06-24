@@ -1,10 +1,10 @@
-use std::sync::Arc;
-use sqlx::{Error, PgPool};
-use sqlx::postgres::PgQueryResult;
-use tracing::error;
 use crate::config::Config;
 use crate::error::authorization::AuthorizationError;
 use crate::models::authorization::Permission;
+use sqlx::postgres::PgQueryResult;
+use sqlx::{Error, PgPool};
+use std::sync::Arc;
+use tracing::error;
 
 pub struct RolePermissions {
     pool: PgPool,
@@ -12,25 +12,28 @@ pub struct RolePermissions {
 }
 
 impl RolePermissions {
-
     pub fn new(pool: PgPool, config: Arc<Config>) -> Self {
         Self { pool, config }
     }
 
-    pub async fn get_role_permissions(&self, role_id: i32) -> sqlx::Result<Vec<Permission>, AuthorizationError> {
-        let res = sqlx::query_as::<_, Permission>
-            ("
+    pub async fn get_role_permissions(
+        &self,
+        role_id: i32,
+    ) -> sqlx::Result<Vec<Permission>, AuthorizationError> {
+        let res = sqlx::query_as::<_, Permission>(
+            "
                 SELECT p.*
                 FROM permissions p
                 INNER JOIN role_permissions rp ON rp.permission_id = p.id
                 WHERE rp.role_id = $1
-                "
-            ).bind(role_id).fetch_all(&self.pool).await;
+                ",
+        )
+        .bind(role_id)
+        .fetch_all(&self.pool)
+        .await;
 
         match res {
-            Ok(permissions) => {
-                Ok(permissions)
-            }
+            Ok(permissions) => Ok(permissions),
             Err(error) => {
                 error!("Failed to query role permissions: {}", error.to_string());
                 Err(AuthorizationError::InternalServerError)
@@ -51,15 +54,13 @@ impl RolePermissions {
                 ON CONFLICT DO NOTHING
                 ",
         )
-            .bind(role_id)
-            .bind(&permission_ids)
-            .execute(&self.pool)
-            .await;
+        .bind(role_id)
+        .bind(&permission_ids)
+        .execute(&self.pool)
+        .await;
 
         match result {
-            Ok(_) => {
-                Ok(())
-            }
+            Ok(_) => Ok(()),
             Err(err) => {
                 error!("Failed to add permissions for role: {}", err.to_string());
                 Err(AuthorizationError::InternalServerError)
@@ -67,20 +68,21 @@ impl RolePermissions {
         }
     }
 
-    pub async fn delete_permissions_for_role(&self, role_id: i32) -> sqlx::Result<(), AuthorizationError> {
-        let result = sqlx::query(
-            "DELETE FROM role_permissions WHERE role_id = $1"
-        ).bind(role_id).execute(&self.pool).await;
+    pub async fn delete_permissions_for_role(
+        &self,
+        role_id: i32,
+    ) -> sqlx::Result<(), AuthorizationError> {
+        let result = sqlx::query("DELETE FROM role_permissions WHERE role_id = $1")
+            .bind(role_id)
+            .execute(&self.pool)
+            .await;
 
         match result {
-            Ok(_) => {
-                Ok(())
-            }
+            Ok(_) => Ok(()),
             Err(err) => {
                 error!("Failed to delete role permissions: {}", err.to_string());
                 Err(AuthorizationError::InternalServerError)
             }
         }
     }
-
 }
