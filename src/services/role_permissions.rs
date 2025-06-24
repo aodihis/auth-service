@@ -67,4 +67,20 @@ impl RolePermissions {
         }
     }
 
+    pub async fn delete_permissions_for_role(&self, role_id: i32) -> sqlx::Result<(), AuthorizationError> {
+        let result = sqlx::query(
+            "DELETE FROM role_permissions WHERE role_id = $1"
+        ).bind(role_id).execute(&self.pool).await;
+
+        match result {
+            Ok(_) => {
+                Ok(())
+            }
+            Err(err) => {
+                error!("Failed to delete role permissions: {}", err.to_string());
+                Err(AuthorizationError::InternalServerError)
+            }
+        }
+    }
+
 }
