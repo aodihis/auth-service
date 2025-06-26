@@ -1,10 +1,10 @@
 use crate::config::Config;
 use crate::error::authorization::AuthorizationError;
 use crate::models::authorization::Permission;
-use sqlx::postgres::PgQueryResult;
+use sqlx::postgres::PgDatabaseError;
 use sqlx::{Error, PgPool};
 use std::sync::Arc;
-use tracing::error;
+use tracing::{error, info};
 
 pub struct RolePermissions {
     pool: PgPool,
@@ -61,8 +61,25 @@ impl RolePermissions {
 
         match result {
             Ok(_) => Ok(()),
-            Err(err) => {
-                error!("Failed to add permissions for role: {}", err.to_string());
+
+            Err(Error::Database(db_err)) => {
+                info!("Failed to add role permission: {}", db_err.to_string());
+                let pg_err = db_err.downcast_ref::<PgDatabaseError>();
+                if pg_err.code() == "23503" {
+                    return match pg_err.constraint() {
+                        Some("role_permissions_role_id_fkey") => {
+                            Err(AuthorizationError::RoleNotFound)
+                        }
+                        Some("role_permissions_permission_id_fkey") => {
+                            Err(AuthorizationError::PermissionNotFound)
+                        }
+                        _ => Err(AuthorizationError::ForeignKeyViolation),
+                    };
+                }
+                Err(AuthorizationError::InternalServerError)
+            }
+            Err(e) => {
+                error!("Failed to add role permission: {}", e.to_string());
                 Err(AuthorizationError::InternalServerError)
             }
         }
